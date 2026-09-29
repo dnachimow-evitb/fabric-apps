@@ -35,3 +35,13 @@ if spark.catalog.tableExists("qa_score_validation"):
         "customer_name", "customer_type", "net_sales_ttm", "sales_yoy", "churn_risk_score", "top_churn_driver",
         "upsell_score", "top_upsell_product_line", "next_best_action", "churn_drivers"), "metrics_top_priority")
 export(dim.where("customer_type = 'Direct' and source_system_count = 3").limit(5), "dim_sample_direct")
+if spark.catalog.tableExists("gold_issue_cascade"):
+    export(spark.table("gold_issue_cascade").orderBy("customer_type", "cohort", "rel_month"), "issue_cascade")
+    export(spark.table("gold_driver_correlation").orderBy("customer_type", "correlation"), "driver_correlation")
+    export(spark.table("qa_cascade_by_persona").orderBy("customer_type", "persona", F.desc("count")), "qa_cascade_by_persona")
+    export(spark.table("gold_customer_cascade").groupBy("customer_type", "pattern").count(), "cascade_patterns")
+    export(spark.table("gold_sku_performance").orderBy(F.desc("net_sales_ttm")).limit(15), "sku_top")
+    export(spark.table("gold_customer_sku_recs").limit(10), "sku_recs_sample")
+if spark.catalog.tableExists("qa_merge_candidates"):
+    export(spark.table("qa_merge_candidates"), "qa_merge_candidates")
+    export(spark.table("gold_identity_merge_candidates").orderBy(F.desc("score")).limit(10), "merge_candidates_top")

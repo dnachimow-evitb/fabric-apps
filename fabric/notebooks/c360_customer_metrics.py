@@ -124,7 +124,8 @@ cpl = (customers.select("unified_customer_id", "customer_type").crossJoin(all_li
        .withColumn("share_of_sales_ttm", F.col("net_sales_ttm") / F.sum("net_sales_ttm").over(w_cust))
        .withColumn("purchased_ttm", F.col("net_sales_ttm") > 0))
 save(cpl.select("unified_customer_id", "product_line", F.col("net_sales_ttm").cast("decimal(14,2)").alias("net_sales_ttm"),
-                F.round("share_of_sales_ttm", 4).alias("share_of_sales_ttm"), "purchased_ttm", "last_purchased",
+                # explicit precision: the app's SQL connector accepts decimals up to precision 28
+                F.round("share_of_sales_ttm", 4).cast("decimal(9,4)").alias("share_of_sales_ttm"), "purchased_ttm", "last_purchased",
                 F.coalesce("views_90d", F.lit(0)).cast("int").alias("views_90d"),
                 F.round("penetration", 4).alias("peer_penetration")), "gold_customer_product_line")
 

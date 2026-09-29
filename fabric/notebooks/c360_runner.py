@@ -6,8 +6,8 @@
 # %%
 import traceback
 
-STEPS = ["c360_customer_dimension", "c360_customer_metrics", "c360_summary_export"]
-START_AT = "c360_customer_metrics"   # skip steps already built; set to STEPS[0] for a full rebuild
+STEPS = ["c360_customer_dimension", "c360_customer_metrics", "c360_sku_risk", "c360_summary_export"]
+START_AT = "c360_customer_dimension"   # skip steps already built; set to STEPS[0] for a full rebuild
 
 log = []
 for step in STEPS[STEPS.index(START_AT):]:

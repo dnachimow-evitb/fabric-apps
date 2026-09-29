@@ -8,6 +8,7 @@
     "c360_customer_dimension": "notebooks/c360_customer_dimension.py",
     "c360_customer_metrics": "notebooks/c360_customer_metrics.py",
     "c360_summary_export": "notebooks/c360_summary_export.py",
-    "c360_runner": "notebooks/c360_runner.py"
+    "c360_runner": "notebooks/c360_runner.py",
+    "c360_sku_risk": "notebooks/c360_sku_risk.py"
   }
 }

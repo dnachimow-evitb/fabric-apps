@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { VegaVisual, useCssTheme } from '@microsoft/fabric-visuals';
 import type { VisualizationSpec } from '@microsoft/fabric-visuals';
 import type { DataTable, InteractionEvent } from '@microsoft/fabric-visuals-core';
@@ -11,6 +11,7 @@ import {
 } from '@/lib/c360';
 import { count, money, pct, signedPct } from '@/lib/format';
 import type { QueryState } from '@/hooks/use-query';
+import { SkuExplorer } from '@/views/SkuExplorer';
 
 const n = (v: unknown) => (typeof v === 'number' ? v : Number(v ?? 0));
 
@@ -20,6 +21,9 @@ export function PortfolioView({ filters, metrics, onOpenCustomer }: {
   const fkey = JSON.stringify(filters);
   const trend = useQuery(`trend:${fkey}`, () => fetchMonthlyTrend(filters));
   const penetration = useQuery('penetration', fetchPenetration);
+  const [line, setLine] = useState<string | null>(null);
+  const [sku, setSku] = useState<string | null>(null);
+  const pickLine = (l: string | null) => { setLine(l); setSku(null); };
 
   return (
     <div className="flex flex-col gap-400">
@@ -45,11 +49,16 @@ export function PortfolioView({ filters, metrics, onOpenCustomer }: {
             {(rows) => rows.length ? <Trend rows={rows} /> : <Empty>No sales in this period.</Empty>}
           </Loaded>
         </Card>
-        <Card className="lg:col-span-5" title="Product line penetration" subtitle="Share of active customers who bought each line. Gaps are upsell whitespace.">
+        <Card className="lg:col-span-5" title="Product line penetration" subtitle="Share of active customers who bought each line. Gaps are upsell whitespace. Click a line to explore its SKUs.">
           <Loaded q={penetration} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*10)]" />}>
-            {(rows) => <Penetration rows={rows} filters={filters} />}
+            {(rows) => <Penetration rows={rows} filters={filters} onLine={pickLine} />}
           </Loaded>
         </Card>
+
+        <div className="lg:col-span-12">
+          <SkuExplorer filters={filters} line={line} sku={sku} onLine={pickLine} onSku={setSku}
+            metrics={metrics.data} onOpenCustomer={onOpenCustomer} />
+        </div>
 
         <Card className="lg:col-span-12" title="Priority customers" subtitle="Ranked by revenue at risk plus upsell value. Select a customer for the full 360.">
           <Loaded q={metrics} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*10)]" />}>
@@ -197,7 +206,7 @@ function Trend({ rows }: { rows: TrendRow[] }) {
   );
 }
 
-function Penetration({ rows, filters }: { rows: PenetrationRow[]; filters: Filters }) {
+function Penetration({ rows, filters, onLine }: { rows: PenetrationRow[]; filters: Filters; onLine: (l: string | null) => void }) {
   const theme = useCssTheme();
   const c = useChartColors();
   const shown = rows.filter((r) => filters.customerType === 'all' || r.customerType === filters.customerType);
@@ -216,7 +225,14 @@ function Penetration({ rows, filters }: { rows: PenetrationRow[]; filters: Filte
       tooltip: [{ field: 'line' }, { field: 'type' }, { field: 'penetration' }],
     },
   };
-  return <VegaVisual spec={spec} data={data} theme={theme} style={{ height: 'calc(var(--spacing-800) * 10)' }} />;
+  const onInteraction = (events: InteractionEvent[]) => {
+    for (const e of events) {
+      if (e.action === 'clear') { onLine(null); continue; }
+      const p = e.selections[0]?.predicates.find((x) => x.name === 'line');
+      if (p?.type === 'set' && typeof p.values[0] === 'string') onLine(p.values[0]);
+    }
+  };
+  return <VegaVisual spec={spec} data={data} theme={theme} style={{ height: 'calc(var(--spacing-800) * 10)' }} onInteraction={onInteraction} />;
 }
 
 function PriorityTable({ rows, onOpen }: { rows: MetricRow[]; onOpen: (id: string) => void }) {

@@ -11,10 +11,13 @@ services:
       enabled: false
     allowedRedirectUris:
       - http://localhost:5173
+      - http://127.0.0.1:5173
+      - https://hazy-slate-bd43ec62ab-westus.webapp.fabricapps.net
   data:
-    enabled: false
+    enabled: true
     path: packages/data
     buildCommand: npm run build
+    dialect: mssql
   staticHosting:
     enabled: true
     path: packages/frontend
@@ -24,6 +27,10 @@ services:
     assetAccess: protected
     embedded:
       only: false
+  storage:
+    enabled: false
+  functions:
+    enabled: false
 connectors:
   - name: c360lakehouse
     type: fabric-sqlanalytics

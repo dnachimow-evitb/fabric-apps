@@ -43,6 +43,7 @@
   },
   "rayfinPacks": [
     "connectors",
+    "data-modeling",
     "visuals"
   ]
 }

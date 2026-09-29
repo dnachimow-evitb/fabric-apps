@@ -51,7 +51,15 @@ const localNetworkAccessPlugin: PluginOption = {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
+    // Rayfin entities (including connector entities under rayfin/connectors) use TC39 Stage 3
+    // decorators. Lower them in the production bundle exactly as vitest.config.ts does for tests;
+    // without this the decorators ship untransformed and the bundle is not parseable JavaScript.
+    react({
+      useAtYourOwnRisk_mutateSwcOptions(options) {
+        options.jsc!.parser!.decorators = true;
+        options.jsc!.transform!.decoratorVersion = '2022-03';
+      },
+    }),
     tailwindcss(),
     rayfinLocalDev({ autoLogin: true, sourceActivity: true }),
     localNetworkAccessPlugin,

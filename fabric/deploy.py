@@ -145,7 +145,7 @@ def find_item(name: str, kind: str = "Notebook"):
 
 
 def deploy_notebook(name: str):
-    nb = to_ipynb((HERE / CFG["notebooks"][name]).read_text(encoding="utf-8"))
+    nb = to_ipynb((HERE / CFG["notebooks"][name]).read_text(encoding="utf-8-sig"))  # tolerate a BOM from Windows editors
     definition = {"format": "ipynb", "parts": [{"path": "notebook-content.ipynb", "payloadType": "InlineBase64",
                                                 "payload": base64.b64encode(json.dumps(nb).encode()).decode()}]}
     item = find_item(name)

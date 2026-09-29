@@ -8,8 +8,8 @@ import { Card, Empty, Loaded, RiskBadge, Skeleton } from '@/components/ui';
 import { useQuery } from '@/hooks/use-query';
 import { useChartColors } from '@/lib/chart-colors';
 import {
-  fetchCustomerMonthly, fetchCustomerProductLines, fetchCustomerProfile, fetchCustomerTimeline, fetchCustomerUpsell,
-  parseDrivers, type CustomerMonthRow, type MetricRow, type ProductLineRow, type ProfileRow, type TimelineRow, type UpsellRow,
+  fetchCustomerCascade, fetchCustomerMonthly, fetchCustomerProductLines, fetchCustomerProfile, fetchCustomerSkuRecs, fetchCustomerSkus,
+  fetchCustomerTimeline, fetchCustomerUpsell, parseDrivers, type CustomerMonthRow, type CustomerSkuRow, type SkuRecRow, type MetricRow, type ProductLineRow, type ProfileRow, type TimelineRow, type UpsellRow,
 } from '@/lib/c360';
 import { count, money, pct, shortDate, signedPct } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -22,12 +22,27 @@ export function CustomerView({ id, metric }: { id: string; metric: MetricRow | u
   const lines = useQuery(`lines:${id}`, () => fetchCustomerProductLines(id));
   const upsell = useQuery(`upsell:${id}`, () => fetchCustomerUpsell(id));
   const timeline = useQuery(`timeline:${id}`, () => fetchCustomerTimeline(id));
+  const skus = useQuery(`skus:${id}`, () => fetchCustomerSkus(id));
+  const skuRecs = useQuery(`sku-recs:${id}`, () => fetchCustomerSkuRecs(id));
+  const cascade = useQuery(`cascade:${id}`, () => fetchCustomerCascade(id));
 
   return (
     <div className="flex flex-col gap-400">
       <Loaded q={profile} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*4)]" />}>
         {(p) => (p ? <ProfileStrip p={p} m={metric} /> : <Card><Empty>This customer isn't in the unified customer table.</Empty></Card>)}
       </Loaded>
+
+      {cascade.data && cascade.data.pattern !== 'Recovered' && (
+        <div role="status" className="flex items-start gap-300 rounded-lg border border-[color:var(--color-status-critical)] bg-card p-400 text-300">
+          <AlertTriangle aria-hidden className="mt-100 icon-size-300 shrink-0 text-[color:var(--color-status-critical)]" />
+          <div>
+            <strong className="font-semibold">Issue cascade: {cascade.data.pattern}.</strong>{' '}
+            {count(cascade.data.ticketsInSpikeMonth)} support tickets in {shortDate(cascade.data.spikeMonth)}; marketing engagement went from{' '}
+            {pct(cascade.data.engagementBefore, 0)} to {pct(cascade.data.engagementAfter, 0)} and monthly sales from{' '}
+            {money(cascade.data.monthlySalesBefore)} to {money(cascade.data.monthlySalesAfter)}.
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-400 lg:grid-cols-12">
         <Card className="lg:col-span-8" title="Sales" subtitle="Monthly net sales, this year vs. last year">
@@ -52,6 +67,17 @@ export function CustomerView({ id, metric }: { id: string; metric: MetricRow | u
         <Card className="lg:col-span-3" title="Returns" subtitle="Last 12 months">
           <Loaded q={monthly} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*8)]" />}>
             {(rows) => <Returns rows={rows} m={metric} />}
+          </Loaded>
+        </Card>
+
+        <Card className="lg:col-span-7" title="SKUs bought" subtitle="Last 12 months vs. prior year. Lapsed SKUs were bought last year but not this year.">
+          <Loaded q={skus} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*7)]" />}>
+            {(rows) => <SkuList rows={rows} />}
+          </Loaded>
+        </Card>
+        <Card className="lg:col-span-5" title="Recommended SKUs" subtitle="From what customers with a similar basket buy">
+          <Loaded q={skuRecs} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*7)]" />}>
+            {(rows) => <SkuRecs rows={rows} />}
           </Loaded>
         </Card>
 
@@ -333,5 +359,60 @@ function Timeline({ rows }: { rows: TimelineRow[] }) {
         );
       })}
     </ol>
+  );
+}
+
+function SkuList({ rows }: { rows: CustomerSkuRow[] }) {
+  const active = [...rows].filter((r) => n(r.netSalesTtm) > 0).sort((a, b) => n(b.netSalesTtm) - n(a.netSalesTtm));
+  const lapsed = rows.filter((r) => n(r.netSalesTtm) === 0 && n(r.netSalesPriorTtm) > 0).sort((a, b) => n(b.netSalesPriorTtm) - n(a.netSalesPriorTtm));
+  if (!rows.length) return <Empty>No SKU purchases in the last 24 months.</Empty>;
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-300">
+        <thead>
+          <tr className="border-b border-border text-left font-heading text-200 uppercase tracking-wider text-muted-foreground">
+            <th className="px-200 py-200 font-semibold">SKU</th>
+            <th className="px-200 py-200 text-right font-semibold">12 mo</th>
+            <th className="px-200 py-200 text-right font-semibold">Prior yr</th>
+            <th className="px-200 py-200 text-right font-semibold">Units</th>
+            <th className="px-200 py-200 text-right font-semibold">Returned</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[...active.slice(0, 8), ...lapsed.slice(0, 4)].map((r) => {
+            const isLapsed = n(r.netSalesTtm) === 0;
+            return (
+              <tr key={r.sku} className="border-b border-border last:border-0">
+                <td className="px-200 py-200">
+                  <span className="block truncate font-semibold">{r.productName}</span>
+                  <span className="block text-200 text-muted-foreground">
+                    {r.productLine}{isLapsed && <span className="ml-100 font-semibold text-[color:var(--color-status-critical)]">· Lapsed</span>}
+                  </span>
+                </td>
+                <td className="px-200 py-200 text-right tabular-nums">{money(r.netSalesTtm)}</td>
+                <td className="px-200 py-200 text-right tabular-nums text-muted-foreground">{money(r.netSalesPriorTtm)}</td>
+                <td className="px-200 py-200 text-right tabular-nums">{count(r.unitsTtm)}</td>
+                <td className="px-200 py-200 text-right tabular-nums">{n(r.returnsTtm) > 0 ? money(r.returnsTtm) : '—'}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function SkuRecs({ rows }: { rows: SkuRecRow[] }) {
+  if (!rows.length) return <Empty>Not enough basket data to recommend SKUs.</Empty>;
+  return (
+    <ul className="flex flex-col gap-200">
+      {rows.map((r) => (
+        <li key={r.sku} className="rounded-md border border-border border-l-4 border-l-primary p-300">
+          <div className="text-300 font-semibold">{r.productName}</div>
+          <div className="text-200 text-muted-foreground">{r.productLine} · {r.reason}</div>
+          <div className="mt-100 text-200 font-semibold">{money(r.estimatedAnnualValue)} est. a year</div>
+        </li>
+      ))}
+    </ul>
   );
 }

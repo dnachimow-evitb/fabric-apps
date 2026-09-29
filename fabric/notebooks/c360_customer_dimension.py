@@ -17,7 +17,7 @@ from pyspark.sql import functions as F, Window
 AS_OF = "2026-09-28"
 BRONZE = "Files/bronze"
 CONFIDENCE = {"source_of_record": 1.0, "shared_id": 1.0, "zendesk_org": 0.95, "email": 0.95,
-              "email_via_marketing": 0.9, "email_domain": 0.8, "new_marketing_only": 0.5, "new_support_only": 0.5,
+              "email_via_marketing": 0.9, "email_domain": 0.8, "steward_merge": 1.0, "new_marketing_only": 0.5, "new_support_only": 0.5,
               "new_unresolved_org": 0.5}
 STATE_REGION = {**{s: "Northeast" for s in ["NY", "MA", "CT", "PA", "NJ"]}, **{s: "Southeast" for s in ["FL", "GA", "NC", "TN"]},
                 **{s: "Central" for s in ["IL", "TX", "MN", "MO"]}, **{s: "West" for s in ["CA", "AZ", "WA", "CO"]}}
@@ -222,6 +222,24 @@ identity = (erp_map.unionByName(shop_map).unionByName(klaviyo_map).unionByName(o
             .withColumn("match_confidence", conf[F.col("match_rule")])
             .select("unified_customer_id", "source_system", "source_id", "source_email", "match_rule",
                     "match_confidence", "anchor_key"))
+
+# Steward-approved merges from the Customer 360 app (MergeProposal records, exposed to this lakehouse as the
+# `app_merge_proposal` table through a OneLake shortcut). The secondary customer's records move to the primary;
+# their original anchor stays in `merged_from_anchor` for the audit trail.
+MERGES = "app_merge_proposal"
+if spark.catalog.tableExists(MERGES):
+    approved = (spark.table(MERGES).where(F.col("status") == "Approved")
+                .select(F.col("secondaryCustomerId").alias("unified_customer_id"), F.col("primaryCustomerId").alias("merged_into"))
+                .dropDuplicates(["unified_customer_id"]))
+    print(f"Applying {approved.count()} approved merge(s)")
+    identity = (identity.join(approved, "unified_customer_id", "left")
+                .withColumn("merged_from_anchor", F.when(F.col("merged_into").isNotNull(), F.col("anchor_key")))
+                .withColumn("match_rule", F.when(F.col("merged_into").isNotNull(), F.lit("steward_merge")).otherwise(F.col("match_rule")))
+                .withColumn("match_confidence", F.when(F.col("merged_into").isNotNull(), F.lit(1.0)).otherwise(F.col("match_confidence")))
+                .withColumn("unified_customer_id", F.coalesce("merged_into", "unified_customer_id"))
+                .drop("merged_into"))
+else:
+    identity = identity.withColumn("merged_from_anchor", F.lit(None).cast("string"))
 save(identity, "silver_customer_identity_map")
 display(spark.table("silver_customer_identity_map").groupBy("source_system", "match_rule").count()
         .orderBy("source_system", F.desc("count")))
@@ -240,7 +258,10 @@ def by_source(system):
 
 
 # which systems each customer appears in
-presence = idm.groupBy("unified_customer_id", "anchor_key").agg(
+anchor_rank = (F.when(F.col("anchor_key").startswith("ERP:"), 0).when(F.col("anchor_key").startswith("SHOP:"), 1)
+               .when(F.col("anchor_key").startswith("EMAIL:"), 2).otherwise(3))
+presence = idm.withColumn("_anchor_rank", anchor_rank).groupBy("unified_customer_id").agg(
+    F.min_by("anchor_key", "_anchor_rank").alias("anchor_key"),
     *[F.max(F.when(F.col("source_system") == s, 1).otherwise(0)).cast("boolean").alias(f"in_{a}")
       for s, a in [("ERP", "erp"), ("Shopify", "shopify"), ("Klaviyo", "klaviyo")]],
     F.max(F.when(F.col("source_system").startswith("Zendesk"), 1).otherwise(0)).cast("boolean").alias("in_zendesk"),
@@ -354,6 +375,82 @@ display(spark.table("gold_dim_customer").groupBy("customer_type", "lifecycle_sta
         .orderBy("customer_type", "lifecycle_stage"))
 
 # %% [markdown]
+# ## 4b. Merge candidates for steward review
+#
+# Pairs of unified customers that are probably the same person but share no ID or email, so the automatic
+# rules could not link them. Evidence, scored 0-1:
+# - **Order reference (strongest):** a support ticket from one customer references an order that belongs to the other
+#   (up to 0.5).
+# - **Same normalised name** (0.25), **similar email handle** (up to 0.15), **same city** (0.1).
+# Candidates need a score of 0.6+, so a shared name alone never qualifies. Reviewed in the app
+# (propose -> steward approves); approved pairs are applied in step 3 on the next run.
+
+# %%
+dimc = spark.table("gold_dim_customer").where(F.col("customer_type").isin("Direct", "Prospect", "Unresolved", "Wholesale"))
+norm = lambda c: F.trim(F.regexp_replace(F.lower(c), "[^a-z ]", ""))
+handle = lambda c: F.regexp_replace(F.split(F.lower(c), "@")[0], "[^a-z]", "")
+people = dimc.select("unified_customer_id", "customer_type", "customer_name", "primary_email", "city", "state",
+                     "lifetime_orders", "source_system_count",
+                     norm("customer_name").alias("name_n"), handle("primary_email").alias("handle"))
+
+# order references: ticket requester (one customer) cites an order owned by another customer
+idm_now = spark.table("silver_customer_identity_map")
+order_owner = (spark.table("silver_orders").alias("o")
+               .join(idm_now.where(F.col("source_system").isin("ERP", "Shopify")).alias("i"),
+                     (F.col("o.customer_ref") == F.col("i.source_id")) & (F.col("o.source_system") == F.col("i.source_system")))
+               .select(F.col("o.order_id").alias("order_number"), F.col("i.unified_customer_id").alias("owner_id")))
+requester = idm_now.where(F.col("source_system") == "Zendesk User").select(F.col("unified_customer_id").alias("requester_uid"),
+                                                                           F.col("source_id").alias("requester_id"))
+refs = (spark.table("silver_zendesk_tickets").where(F.col("order_number").isNotNull())
+        .join(requester, "requester_id").join(order_owner, "order_number")
+        .where(F.col("requester_uid") != F.col("owner_id"))
+        .groupBy(F.least("requester_uid", "owner_id").alias("id_a"), F.greatest("requester_uid", "owner_id").alias("id_b"))
+        .agg(F.countDistinct("ticket_id").alias("order_refs")))
+
+name_pairs = (people.alias("a").join(people.alias("b"), (F.col("a.name_n") == F.col("b.name_n"))
+                                      & (F.col("a.unified_customer_id") < F.col("b.unified_customer_id")))
+              .select(F.col("a.unified_customer_id").alias("id_a"), F.col("b.unified_customer_id").alias("id_b")))
+pair_ids = name_pairs.unionByName(refs.select("id_a", "id_b")).distinct()
+pa = people.select(*[F.col(c).alias(f"a_{c}") for c in people.columns])
+pb = people.select(*[F.col(c).alias(f"b_{c}") for c in people.columns])
+scored = (pair_ids.join(pa, F.col("id_a") == F.col("a_unified_customer_id")).join(pb, F.col("id_b") == F.col("b_unified_customer_id"))
+          .join(refs, ["id_a", "id_b"], "left")
+          # two separate customers of record (both Shopify, or both ERP) are never auto-proposed
+          .where(~((F.col("a_customer_type") == F.col("b_customer_type")) & F.col("a_customer_type").isin("Direct", "Wholesale"))))
+lev = F.levenshtein(F.col("a_handle"), F.col("b_handle"))
+longest = F.greatest(F.length("a_handle"), F.length("b_handle"))
+scored = (scored
+          .withColumn("order_refs", F.coalesce("order_refs", F.lit(0)))
+          .withColumn("same_name", F.col("a_name_n") == F.col("b_name_n"))
+          .withColumn("handle_similarity", F.when(longest > 0, 1 - lev / longest).otherwise(0.0))
+          .withColumn("same_city", F.coalesce((F.col("a_city") == F.col("b_city")) & F.col("a_city").isNotNull(), F.lit(False)))
+          .withColumn("score", F.round(F.least(F.lit(0.5), F.col("order_refs") * 0.3)
+                                       + F.when(F.col("same_name"), 0.25).otherwise(0)
+                                       + F.col("handle_similarity") * 0.15
+                                       + F.when(F.col("same_city"), 0.1).otherwise(0), 3))
+          .where("score >= 0.6"))
+type_rank = F.create_map(*[F.lit(x) for kv in {"Wholesale": 0, "Direct": 1, "Prospect": 2, "Unresolved": 3}.items() for x in kv])
+a_first = type_rank[F.col("a_customer_type")] <= type_rank[F.col("b_customer_type")]
+cols = []
+for c in ["unified_customer_id", "customer_type", "customer_name", "primary_email", "city", "state", "lifetime_orders", "source_system_count"]:
+    cols += [F.when(a_first, F.col(f"a_{c}")).otherwise(F.col(f"b_{c}")).alias(f"primary_{c}"),
+             F.when(a_first, F.col(f"b_{c}")).otherwise(F.col(f"a_{c}")).alias(f"secondary_{c}")]
+cand = (scored.select(*cols, "score", "handle_similarity", "same_city", "same_name", "order_refs")
+        .withColumnRenamed("primary_unified_customer_id", "primary_customer_id")
+        .withColumnRenamed("secondary_unified_customer_id", "secondary_customer_id")
+        .withColumn("reasons", F.concat_ws("; ",
+                                          F.when(F.col("order_refs") > 0, F.format_string("support ticket cites their order (%d)", F.col("order_refs"))),
+                                          F.when(F.col("same_name"), F.lit("same name")),
+                                          F.when(F.col("handle_similarity") >= 0.6, F.format_string("similar email handle (%.0f%%)", F.col("handle_similarity") * 100)),
+                                          F.when(F.col("same_city"), F.lit("same city"))))
+        .withColumn("candidate_id", F.concat(F.lit("MC-"), F.upper(F.substring(F.sha2(F.concat_ws("|", "primary_customer_id", "secondary_customer_id"), 256), 1, 10)))))
+save(cand.select("candidate_id", "primary_customer_id", "secondary_customer_id",
+                 *[c for c in cand.columns if c.startswith(("primary_", "secondary_")) and c not in ("primary_customer_id", "secondary_customer_id")],
+                 "score", F.round("handle_similarity", 3).alias("handle_similarity"), "same_city", "same_name",
+                 F.col("order_refs").cast("int").alias("order_refs"), "reasons"),
+     "gold_identity_merge_candidates")
+
+# %% [markdown]
 # ## 5. QA: identity resolution vs. ground truth (test data only)
 #
 # **Precision**: share of source records that landed on a customer whose other records belong to the same
@@ -376,3 +473,11 @@ qa = (scored.groupBy("source_system", "match_rule")
       .withColumn("unmatched_truth_records", F.lit(truth.count() - j.count())))
 save(qa, "qa_identity_resolution")
 display(spark.table("qa_identity_resolution").orderBy("source_system", F.desc("records")))
+
+# how many merge candidates are truly the same person (test data only)
+cand_q = (spark.table("gold_identity_merge_candidates")
+          .join(dominant.select(F.col("unified_customer_id").alias("primary_customer_id"), F.col("dominant_key").alias("pk")), "primary_customer_id")
+          .join(dominant.select(F.col("unified_customer_id").alias("secondary_customer_id"), F.col("dominant_key").alias("sk")), "secondary_customer_id")
+          .groupBy((F.col("pk") == F.col("sk")).alias("truly_same_person")).count())
+save(cand_q, "qa_merge_candidates")
+display(spark.table("qa_merge_candidates"))

@@ -2,7 +2,7 @@
   "source": "c360lakehouse",
   "connector": "fabric-sqlanalytics",
   "connectionString": "vao7ifoxtvoehl4ecclxofah7m-ompzpkfx7qrujc3an262ue76le.datawarehouse.fabric.microsoft.com",
-  "discoveredAt": "2026-09-29T19:21:31.151Z",
+  "discoveredAt": "2026-09-29T20:38:09.823Z",
   "schemas": [
     {
       "schemaName": "dbo",
@@ -983,6 +983,100 @@
           ]
         },
         {
+          "tableName": "gold_customer_cascade",
+          "columns": [
+            {
+              "columnName": "unified_customer_id",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "customer_type",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "customer_name",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "region",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "account_manager",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "spike_month",
+              "dataType": "date",
+              "isNullable": true,
+              "datePrecision": 0
+            },
+            {
+              "columnName": "tickets_in_spike_month",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "engagement_before",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "engagement_after",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "monthly_sales_before",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 14,
+              "scale": 2
+            },
+            {
+              "columnName": "monthly_sales_after",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 14,
+              "scale": 2
+            },
+            {
+              "columnName": "engagement_drop_lag",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "sales_drop_lag",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "pattern",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            }
+          ]
+        },
+        {
           "tableName": "gold_customer_metrics",
           "columns": [
             {
@@ -1345,7 +1439,7 @@
               "columnName": "share_of_sales_ttm",
               "dataType": "decimal",
               "isNullable": true,
-              "precision": 29,
+              "precision": 9,
               "scale": 4
             },
             {
@@ -1371,6 +1465,154 @@
               "dataType": "float",
               "isNullable": true,
               "precision": 53
+            }
+          ]
+        },
+        {
+          "tableName": "gold_customer_sku",
+          "columns": [
+            {
+              "columnName": "unified_customer_id",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "customer_type",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "customer_name",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "region",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "account_manager",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "sku",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "product_name",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "product_line",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "net_sales_ttm",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 14,
+              "scale": 2
+            },
+            {
+              "columnName": "net_sales_prior_ttm",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 14,
+              "scale": 2
+            },
+            {
+              "columnName": "returns_ttm",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 14,
+              "scale": 2
+            },
+            {
+              "columnName": "units_ttm",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "last_purchased",
+              "dataType": "date",
+              "isNullable": true,
+              "datePrecision": 0
+            }
+          ]
+        },
+        {
+          "tableName": "gold_customer_sku_recs",
+          "columns": [
+            {
+              "columnName": "unified_customer_id",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "rank",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "sku",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "product_name",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "product_line",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "score",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "estimated_annual_value",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 14,
+              "scale": 2
+            },
+            {
+              "columnName": "because_sku",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "reason",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
             }
           ]
         },
@@ -1708,6 +1950,255 @@
           ]
         },
         {
+          "tableName": "gold_driver_correlation",
+          "columns": [
+            {
+              "columnName": "driver_key",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "driver",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "customer_type",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "correlation",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "n",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "sales_change_when_high",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "sales_change_otherwise",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "high_definition",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            }
+          ]
+        },
+        {
+          "tableName": "gold_identity_merge_candidates",
+          "columns": [
+            {
+              "columnName": "candidate_id",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "primary_customer_id",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "secondary_customer_id",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "primary_customer_type",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "secondary_customer_type",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "primary_customer_name",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "secondary_customer_name",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "primary_primary_email",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "secondary_primary_email",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "primary_city",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "secondary_city",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "primary_state",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "secondary_state",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "primary_lifetime_orders",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "secondary_lifetime_orders",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "primary_source_system_count",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "secondary_source_system_count",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "score",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "handle_similarity",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "same_city",
+              "dataType": "bit",
+              "isNullable": true
+            },
+            {
+              "columnName": "same_name",
+              "dataType": "bit",
+              "isNullable": true
+            },
+            {
+              "columnName": "order_refs",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "reasons",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            }
+          ]
+        },
+        {
+          "tableName": "gold_issue_cascade",
+          "columns": [
+            {
+              "columnName": "cohort",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "customer_type",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "rel_month",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "customers",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "sales_index",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "engagement_rate",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "tickets_per_customer",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            }
+          ]
+        },
+        {
           "tableName": "gold_product_line_penetration",
           "columns": [
             {
@@ -1741,6 +2232,256 @@
               "isNullable": true,
               "precision": 14,
               "scale": 2
+            }
+          ]
+        },
+        {
+          "tableName": "gold_risk_concentration",
+          "columns": [
+            {
+              "columnName": "dimension",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "value",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "customer_type",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "customers",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "high_risk_customers",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "net_sales_ttm",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 14,
+              "scale": 2
+            },
+            {
+              "columnName": "revenue_at_risk",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 14,
+              "scale": 2
+            },
+            {
+              "columnName": "share_of_risk",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            }
+          ]
+        },
+        {
+          "tableName": "gold_sku_affinity",
+          "columns": [
+            {
+              "columnName": "customer_type",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "sku",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "rank",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "related_sku",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "related_product_name",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "related_product_line",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "pair_customers",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "confidence",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "lift",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            }
+          ]
+        },
+        {
+          "tableName": "gold_sku_performance",
+          "columns": [
+            {
+              "columnName": "sku",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "product_name",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "product_line",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "category",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "customer_type",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "net_sales_ttm",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 14,
+              "scale": 2
+            },
+            {
+              "columnName": "net_sales_prior_ttm",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 14,
+              "scale": 2
+            },
+            {
+              "columnName": "returns_ttm",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 14,
+              "scale": 2
+            },
+            {
+              "columnName": "defect_returns_ttm",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 14,
+              "scale": 2
+            },
+            {
+              "columnName": "units_ttm",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "buyers_ttm",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "tickets_linked_ttm",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "return_rate_ttm",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "sales_yoy",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "repeat_buyer_rate",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            }
+          ]
+        },
+        {
+          "tableName": "qa_cascade_by_persona",
+          "columns": [
+            {
+              "columnName": "customer_type",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "persona",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "pattern",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "count",
+              "dataType": "bigint",
+              "isNullable": true,
+              "precision": 19,
+              "scale": 0
             }
           ]
         },
@@ -1789,6 +2530,23 @@
               "dataType": "int",
               "isNullable": true,
               "precision": 10,
+              "scale": 0
+            }
+          ]
+        },
+        {
+          "tableName": "qa_merge_candidates",
+          "columns": [
+            {
+              "columnName": "truly_same_person",
+              "dataType": "bit",
+              "isNullable": true
+            },
+            {
+              "columnName": "count",
+              "dataType": "bigint",
+              "isNullable": true,
+              "precision": 19,
               "scale": 0
             }
           ]
@@ -1882,6 +2640,12 @@
             },
             {
               "columnName": "anchor_key",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "merged_from_anchor",
               "dataType": "varchar",
               "isNullable": true,
               "maxLength": 8000
