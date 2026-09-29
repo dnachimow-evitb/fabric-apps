@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customer 360 Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Tokens: LAGOS-inspired (Montserrat, black/white, plum, warm off-white, gold) ---------- */
+:root {
+  color-scheme: light;
+  --page: #f9f8f7;
+  --surface: #ffffff;
+  --surface-2: #f4f2f0;
+  --ink: #000000;
+  --ink-2: #4a4748;
+  --muted: #7d7a7b;
+  --hairline: #e6e2df;
+  --axis: #c9c4c0;
+  --brand: #4b3048;          /* LAGOS plum */
+  --brand-ink: #ffffff;
+  --brand-wash: #f3eef2;
+  --gold: #b07a12;
+  --series-1: #8b3d80;       /* plum  — validated light, all-pairs */
+  --series-2: #b07a12;       /* gold */
+  --series-3: #1a7fb8;       /* blue */
+  --good: #0ca30c; --good-ink: #006300;
+  --warning: #fab219; --warning-ink: #8a5a00;
+  --serious: #ec835a; --serious-ink: #a4461d;
+  --critical: #d03b3b; --critical-ink: #b02a2a;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(75,48,72,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #121011; --surface: #1c1a1b; --surface-2: #252224;
+    --ink: #ffffff; --ink-2: #cfc9cc; --muted: #928c8f;
+    --hairline: #2f2b2d; --axis: #45403f;
+    --brand: #6d4868; --brand-ink: #ffffff; --brand-wash: #2a2029;
+    --gold: #d9a441;
+    --series-1: #c46fb6; --series-2: #b8841a; --series-3: #1f6fb0;
+    --good-ink: #3fcf3f; --warning-ink: #fab219; --serious-ink: #ec835a; --critical-ink: #ff7a7a;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #121011; --surface: #1c1a1b; --surface-2: #252224;
+  --ink: #ffffff; --ink-2: #cfc9cc; --muted: #928c8f;
+  --hairline: #2f2b2d; --axis: #45403f;
+  --brand: #6d4868; --brand-ink: #ffffff; --brand-wash: #2a2029;
+  --gold: #d9a441;
+  --series-1: #c46fb6; --series-2: #b8841a; --series-3: #1f6fb0;
+  --good-ink: #3fcf3f; --warning-ink: #fab219; --serious-ink: #ec835a; --critical-ink: #ff7a7a;
+  --shadow: none;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--page); color: var(--ink);
+  font-family: Montserrat, "Segoe UI", system-ui, sans-serif;
+  font-size: 13px; font-weight: 500; letter-spacing: .2px; line-height: 1.45;
+}
+button { font: inherit; color: inherit; }
+.caps { text-transform: uppercase; letter-spacing: 1.5px; }
+
+/* ---------- Header ---------- */
+.promo { background: var(--brand); color: var(--brand-ink); text-align: center; font-size: 11px; padding: 7px 16px; letter-spacing: 2px; text-transform: uppercase; }
+.brandbar { background: var(--surface); border-bottom: 1px solid var(--hairline); }
+.brandbar-inner { max-width: 1320px; margin: 0 auto; padding: 18px 24px 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+.wordmark { font-size: 30px; font-weight: 400; letter-spacing: 12px; text-align: center; padding-left: 12px; }
+.product { font-size: 11px; color: var(--muted); }
+.header-actions { justify-self: end; display: flex; gap: 8px; }
+.icon-btn { border: 1px solid var(--hairline); background: var(--surface); border-radius: 2px; padding: 6px 10px; cursor: pointer; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+.icon-btn:hover { border-color: var(--ink); }
+.tabs { max-width: 1320px; margin: 0 auto; padding: 14px 24px 0; display: flex; justify-content: center; gap: 36px; }
+.tab { background: none; border: 0; padding: 10px 2px 12px; cursor: pointer; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 2px solid transparent; color: var(--ink-2); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* ---------- Layout ---------- */
+main { max-width: 1320px; margin: 0 auto; padding: 20px 24px 64px; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 20px; }
+.filter { display: flex; flex-direction: column; gap: 4px; }
+.filter label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; }
+.filter select { font: inherit; background: var(--surface); color: var(--ink); border: 1px solid var(--hairline); border-radius: 2px; padding: 7px 28px 7px 10px; min-width: 150px; }
+.filters .spacer { flex: 1; }
+.stamp { font-size: 11px; color: var(--muted); }
+
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(12, minmax(0, 1fr)); }
+.span-12 { grid-column: span 12; } .span-8 { grid-column: span 8; } .span-7 { grid-column: span 7; }
+.span-6 { grid-column: span 6; } .span-5 { grid-column: span 5; } .span-4 { grid-column: span 4; }
+@media (max-width: 1080px) { .span-8, .span-7, .span-6, .span-5, .span-4 { grid-column: span 12; } }
+
+.card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 2px; box-shadow: var(--shadow); padding: 18px 20px; min-width: 0; }
+.card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; margin: 0; }
+.card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.link-btn { background: none; border: 0; padding: 0; cursor: pointer; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.link-btn:hover { color: var(--ink); }
+
+/* KPI tiles */
+.kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+@media (max-width: 1080px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--surface); border: 1px solid var(--hairline); border-radius: 2px; padding: 14px 16px; box-shadow: var(--shadow); min-width: 0; }
+.kpi .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.3px; color: var(--muted); }
+.kpi .value { font-size: 26px; font-weight: 500; letter-spacing: .5px; margin-top: 6px; }
+.kpi .delta { font-size: 11px; margin-top: 2px; color: var(--ink-2); }
+.kpi.accent { border-top: 2px solid var(--brand); }
+.up-good { color: var(--good-ink); } .up-bad { color: var(--critical-ink); }
+
+/* Charts */
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { fill: var(--muted); font-size: 10px; font-family: inherit; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 11px; color: var(--ink-2); margin-bottom: 8px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.legend i.line { width: 14px; height: 2px; border-radius: 1px; vertical-align: 3px; }
+.tooltip { position: fixed; pointer-events: none; z-index: 20; background: var(--surface); color: var(--ink); border: 1px solid var(--hairline); box-shadow: 0 6px 24px rgba(0,0,0,.14); padding: 8px 10px; font-size: 11px; border-radius: 2px; min-width: 120px; opacity: 0; transition: opacity .08s; }
+.tooltip .tt-title { font-weight: 600; margin-bottom: 4px; }
+.tooltip .tt-row { display: flex; justify-content: space-between; gap: 14px; }
+.tooltip .tt-row span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; }
+.quad-label { font-size: 10px !important; text-transform: uppercase; letter-spacing: 1.3px; fill: var(--ink-2) !important; font-weight: 600; }
+
+/* HTML bars */
+.hbars { display: flex; flex-direction: column; gap: 9px; }
+.hbar { display: grid; grid-template-columns: 128px 1fr 64px; gap: 10px; align-items: center; font-size: 12px; }
+.hbar .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+.hbar .track { height: 10px; background: var(--surface-2); border-radius: 0 4px 4px 0; position: relative; }
+.hbar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background: var(--series-1); }
+.hbar .val { text-align: right; font-variant-numeric: tabular-nums; }
+#c-mix .hbar { grid-template-columns: 120px 1fr 72px; }
+.hbar.gap .name { color: var(--ink); font-weight: 600; }
+.hbar.gap .track { background: repeating-linear-gradient(135deg, var(--surface-2) 0 5px, var(--brand-wash) 5px 10px); border: 1px dashed var(--axis); }
+
+/* Tables */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--hairline); white-space: nowrap; cursor: default; }
+th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+td { padding: 10px; border-bottom: 1px solid var(--hairline); vertical-align: middle; }
+tbody tr.clickable { cursor: pointer; }
+tbody tr.clickable:hover { background: var(--brand-wash); }
+tbody tr.clickable:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+.acct-name { font-weight: 600; }
+#accounts td:first-child { min-width: 180px; }
+.acct-meta.up-good { color: var(--good-ink); } .acct-meta.up-bad { color: var(--critical-ink); }
+.acct-meta { font-size: 11px; color: var(--muted); }
+.chip { display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; padding: 2px 7px; border: 1px solid var(--hairline); border-radius: 2px; color: var(--ink-2); white-space: nowrap; }
+.chip.dot::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--c); margin-right: 5px; vertical-align: 0; }
+.status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.status .ico { width: 16px; height: 16px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 10px; color: #fff; font-weight: 700; }
+.status.high .ico { background: var(--critical); } .status.high { color: var(--critical-ink); }
+.status.med .ico { background: var(--warning); color: #3a2a00; } .status.med { color: var(--warning-ink); }
+.status.low .ico { background: var(--good); } .status.low { color: var(--good-ink); }
+.meter { display: inline-flex; align-items: center; gap: 8px; }
+.meter .bar { width: 64px; height: 6px; background: var(--surface-2); border-radius: 3px; position: relative; overflow: hidden; }
+.meter .bar b { position: absolute; left: 0; top: 0; bottom: 0; background: var(--series-2); border-radius: 3px; }
+.dots { display: inline-flex; gap: 3px; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--axis); }
+.dots i.on { background: var(--series-1); border-color: var(--series-1); }
+.nba { font-size: 11px; color: var(--ink-2); max-width: 240px; }
+.spark { width: 84px; height: 24px; display: block; }
+
+/* 360 view */
+.profile { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr; gap: 0; padding: 0; }
+.profile > div { padding: 18px 20px; border-right: 1px solid var(--hairline); min-width: 0; }
+.profile > div:last-child { border-right: 0; }
+@media (max-width: 1080px) { .profile { grid-template-columns: 1fr 1fr; } .profile > div { border-bottom: 1px solid var(--hairline); } }
+@media (max-width: 560px) { .profile { grid-template-columns: 1fr; } .profile > div { border-right: 0; } }
+.profile h2 { font-size: 20px; font-weight: 500; letter-spacing: 1px; margin: 4px 0 6px; }
+.profile .big { font-size: 28px; font-weight: 500; margin: 4px 0 2px; }
+.profile .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.3px; color: var(--muted); }
+.picker { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.picker select { font: inherit; background: var(--surface); color: var(--ink); border: 1px solid var(--hairline); border-radius: 2px; padding: 8px 10px; min-width: 260px; max-width: 100%; }
+.back { background: none; border: 0; cursor: pointer; text-transform: uppercase; letter-spacing: 1.3px; font-size: 11px; color: var(--ink-2); padding: 0; }
+.back:hover { color: var(--ink); }
+.drivers { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.drivers li { display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: start; font-size: 12px; }
+.drivers .impact { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.recs { display: flex; flex-direction: column; gap: 10px; }
+.rec { border: 1px solid var(--hairline); border-left: 3px solid var(--gold); padding: 10px 12px; border-radius: 2px; }
+.rec .t { font-weight: 600; font-size: 12px; }
+.rec .d { font-size: 11px; color: var(--ink-2); margin-top: 2px; }
+.rec .v { font-size: 11px; margin-top: 6px; color: var(--muted); }
+.feed { list-style: none; margin: 0; padding: 0; position: relative; }
+.feed li { display: grid; grid-template-columns: 74px 22px 1fr; gap: 8px; padding: 7px 0; font-size: 12px; align-items: start; }
+.feed .when { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.feed .src { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 9px; font-weight: 700; color: #fff; }
+.feed .what .m { font-size: 11px; color: var(--muted); }
+.mini-stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 14px; }
+.mini-stats .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); }
+.mini-stats .v { font-size: 18px; font-weight: 500; }
+.note { font-size: 11px; color: var(--muted); margin-top: 10px; }
+.hidden { display: none !important; }
+@media (max-width: 560px) {
+  main, .brandbar-inner, .tabs { padding-left: 16px; padding-right: 16px; }
+  .brandbar-inner { grid-template-columns: 1fr auto; }
+  .brandbar-inner .product { display: none; }
+  .wordmark { text-align: left; font-size: 24px; letter-spacing: 8px; padding-left: 0; }
+  .hbar { grid-template-columns: 96px 1fr 52px; }
+  .filter select { min-width: 0; width: 100%; }
+  .filter { flex: 1 1 140px; }
+}
+</style>
+</head>
+<body>
+<div class="promo">Customer 360 · Design mockup · Illustrative data only</div>
+<header class="brandbar">
+  <div class="brandbar-inner">
+    <div class="product caps">Customer Intelligence</div>
+    <div class="wordmark" aria-label="LAGOS">LAGOS</div>
+    <div class="header-actions"><button class="icon-btn" id="themeBtn" type="button">Theme</button></div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-portfolio" aria-selected="true" data-view="portfolio">Portfolio</button>
+    <button class="tab" role="tab" id="tab-customer" aria-selected="false" data-view="customer">Customer 360</button>
+  </nav>
+</header>
+
+<main>
+  <div class="filters" role="group" aria-label="Filters">
+    <div class="filter"><label for="f-range">Period</label>
+      <select id="f-range"><option>Trailing 12 months</option><option>Year to date</option><option>Last 90 days</option></select></div>
+    <div class="filter"><label for="f-channel">Channel</label>
+      <select id="f-channel"><option value="all">All channels</option><option value="Wholesale">Wholesale (B2B)</option><option value="DTC">Direct (B2C)</option></select></div>
+    <div class="filter"><label for="f-region">Region</label>
+      <select id="f-region"><option value="all">All regions</option><option>Northeast</option><option>Southeast</option><option>Central</option><option>West</option></select></div>
+    <div class="filter"><label for="f-owner">Owner</label>
+      <select id="f-owner"><option value="all">All owners</option><option>J. Ramirez</option><option>K. Osei</option><option>M. Chen</option><option>Client Services</option></select></div>
+    <div class="spacer"></div>
+    <div class="stamp">Refreshed daily from Fabric · last run 06:00</div>
+  </div>
+
+  <!-- ================= PORTFOLIO ================= -->
+  <section id="view-portfolio">
+    <div class="kpis" id="kpis"></div>
+    <div class="grid">
+      <div class="card span-7">
+        <div class="card-head"><div><h3 class="card-title">Churn risk × upsell opportunity</h3><div class="card-sub">Each dot is a customer · size = trailing-12-month net sales · click to open</div></div>
+          <button class="link-btn" data-table="matrix">Table view</button></div>
+        <div class="legend" id="matrix-legend"></div>
+        <div class="chart" id="matrix"></div>
+        <div class="table-wrap hidden" id="matrix-table"></div>
+      </div>
+      <div class="card span-5">
+        <div class="card-head"><div><h3 class="card-title">SKU diversification</h3><div class="card-sub">Customers by number of collections purchased (of 9)</div></div>
+          <button class="link-btn" data-table="breadth">Table view</button></div>
+        <div class="chart" id="breadth"></div>
+        <div class="table-wrap hidden" id="breadth-table"></div>
+        <div class="note" id="breadth-note"></div>
+      </div>
+
+      <div class="card span-6">
+        <div class="card-head"><div><h3 class="card-title">Net sales vs. returns</h3><div class="card-sub">Monthly, trailing 24 months · $ thousands</div></div>
+          <button class="link-btn" data-table="trend">Table view</button></div>
+        <div class="legend" id="trend-legend"></div>
+        <div class="chart" id="trend"></div>
+        <div class="chart" id="trend-returns" style="margin-top:10px"></div>
+        <div class="table-wrap hidden" id="trend-table"></div>
+      </div>
+      <div class="card span-6">
+        <div class="card-head"><div><h3 class="card-title">Collection penetration</h3><div class="card-sub">% of active customers who bought each collection · whitespace = upsell</div></div></div>
+        <div class="hbars" id="penetration"></div>
+      </div>
+
+      <div class="card span-12">
+        <div class="card-head"><div><h3 class="card-title">Priority customers</h3><div class="card-sub">Ranked by revenue at risk + upsell value · click a row for the Customer 360</div></div>
+          <div class="filter" style="flex-direction:row;align-items:center;gap:8px"><label for="sortBy" style="margin:0">Sort</label>
+            <select id="sortBy" style="min-width:0"><option value="priority">Priority</option><option value="churn">Churn risk</option><option value="upsell">Upsell score</option><option value="sales">Net sales</option></select></div></div>
+        <div class="table-wrap"><table id="accounts"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CUSTOMER 360 ================= -->
+  <section id="view-customer" class="hidden">
+    <div class="picker">
+      <button class="back" id="backBtn" type="button">← Portfolio</button>
+      <select id="custPicker" aria-label="Choose customer"></select>
+    </div>
+    <div class="card profile" id="profile"></div>
+    <div class="grid" style="margin-top:16px">
+      <div class="card span-8">
+        <div class="card-head"><div><h3 class="card-title">Sales</h3><div class="card-sub">Monthly net sales · this year vs. last year · $ thousands</div></div>
+          <button class="link-btn" data-table="c-sales">Table view</button></div>
+        <div class="legend" id="c-sales-legend"></div>
+        <div class="chart" id="c-sales"></div>
+        <div class="table-wrap hidden" id="c-sales-table"></div>
+      </div>
+      <div class="card span-4">
+        <div class="card-head"><div><h3 class="card-title">Churn risk drivers</h3><div class="card-sub">What moves this customer's score</div></div></div>
+        <ul class="drivers" id="c-drivers"></ul>
+      </div>
+
+      <div class="card span-5">
+        <div class="card-head"><div><h3 class="card-title">SKU mix & whitespace</h3><div class="card-sub">Share of TTM sales by collection · hatched = not yet purchased</div></div></div>
+        <div class="hbars" id="c-mix"></div>
+      </div>
+      <div class="card span-4">
+        <div class="card-head"><div><h3 class="card-title">Upsell opportunities</h3><div class="card-sub">Based on similar customers' baskets</div></div></div>
+        <div class="recs" id="c-recs"></div>
+      </div>
+      <div class="card span-3" style="grid-column: span 3">
+        <div class="card-head"><div><h3 class="card-title">Returns</h3><div class="card-sub">Trailing 12 months</div></div></div>
+        <div id="c-returns"></div>
+      </div>
+
+      <div class="card span-6">
+        <div class="card-head"><div><h3 class="card-title">Marketing activity</h3><div class="card-sub">Touches and engagement, last 12 months</div></div>
+          <button class="link-btn" data-table="c-mkt">Table view</button></div>
+        <div class="mini-stats" id="c-mkt-stats"></div>
+        <div class="chart" id="c-mkt"></div>
+        <div class="table-wrap hidden" id="c-mkt-table"></div>
+      </div>
+      <div class="card span-6">
+        <div class="card-head"><div><h3 class="card-title">Zendesk tickets</h3><div class="card-sub">Service history</div></div></div>
+        <div class="mini-stats" id="c-zd-stats"></div>
+        <div class="table-wrap"><table id="c-zd"></table></div>
+      </div>
+
+      <div class="card span-12">
+        <div class="card-head"><div><h3 class="card-title">Activity timeline</h3><div class="card-sub">Orders, returns, marketing and service in one feed</div></div></div>
+        <ul class="feed" id="c-feed"></ul>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="tooltip" id="tt" role="status" aria-live="polite"></div>
+
+<script>
+/* =================== Mock data (deterministic) =================== */
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const R = rng(42);
+const pick = (a, r = R) => a[Math.floor(r() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+const COLLECTIONS = ["Signature Caviar", "Caviar Gold", "Smart Caviar", "KSL", "Luna Pearl", "High Bar", "Men's", "Watches", "Bridal"];
+const COLL_POP = [0.92, 0.66, 0.58, 0.44, 0.38, 0.27, 0.22, 0.14, 0.11];
+const MONTHS = (() => { const out = []; const d = new Date(2024, 9, 1); for (let i = 0; i < 24; i++) { out.push(new Date(d.getFullYear(), d.getMonth() + i, 1)); } return out; })();
+const mLabel = d => d.toLocaleString("en-US", { month: "short" });
+const mLabelY = d => d.toLocaleString("en-US", { month: "short", year: "2-digit" });
+
+const B2B = ["Bergstrom Fine Jewelers", "Harlow & Finch", "Marisol Jewelers", "Castellan Diamond Co.", "Whitfield Jewelers", "Ondine Boutique", "Pemberton & Sons", "Aurelia Fine Jewelry", "Kessler Jewelers", "Brightwater Gems", "Solano Jewelers", "Thornbury Gold", "Velloso & Co.", "Northgate Jewelers", "Larkspur Fine Jewelry", "Delacroix Jewelers", "Hollis & Vane", "Seabrook Jewelers", "Ashford Diamonds", "Meridian Fine Jewelry", "Carrow Jewelers", "Lindqvist & Daughters", "Palisade Gems", "Rosen Jewelers", "Tidewater Jewelers", "Emberly & Co."];
+const REGIONS = ["Northeast", "Southeast", "Central", "West"];
+const OWNERS = ["J. Ramirez", "K. Osei", "M. Chen"];
+
+const customers = [];
+B2B.forEach((name, i) => customers.push(makeCustomer(i, name, "Wholesale")));
+for (let i = 0; i < 34; i++) customers.push(makeCustomer(100 + i, "Client #" + (10400 + Math.floor(R() * 900)), "DTC"));
+
+function makeCustomer(id, name, channel) {
+  const r = rng(id * 7919 + 13);
+  const b2b = channel === "Wholesale";
+  const sales = b2b ? 180000 + r() ** 1.6 * 1400000 : 6000 + r() ** 2 * 90000;
+  const owned = COLLECTIONS.map((c, k) => k === 0 ? true : r() < COLL_POP[k] * (b2b ? 1.05 : 0.7));
+  const breadth = owned.filter(Boolean).length;
+  const yoy = (r() - 0.55) * 0.7;                       // -38% .. +32%
+  const returnRate = clamp(0.03 + r() * 0.1 + (yoy < -0.15 ? 0.03 : 0), 0.01, 0.2);
+  const openTickets = Math.floor(r() ** 2 * (b2b ? 6 : 3));
+  const highTickets = Math.floor(openTickets * r() * 0.7);
+  const daysSinceEngaged = Math.floor(r() ** 1.5 * 150);
+  const daysSinceOrder = Math.floor(r() ** 1.7 * (b2b ? 120 : 300));
+  let churn = 22 + (-yoy * 70) + (returnRate - 0.06) * 180 + highTickets * 8 + openTickets * 2 + daysSinceEngaged * 0.12 + (b2b ? 0 : daysSinceOrder * 0.06) + (5 - breadth) * 2 + (r() - .5) * 10;
+  churn = Math.round(clamp(churn, 3, 97));
+  const missingPop = COLLECTIONS.reduce((s, c, k) => s + (owned[k] ? 0 : COLL_POP[k]), 0);
+  let upsell = 18 + missingPop * 22 + (yoy > 0 ? yoy * 40 : 0) + Math.log10(sales) * 4 - (churn > 70 ? 12 : 0) + (r() - .5) * 14;
+  upsell = Math.round(clamp(upsell, 4, 96));
+  const upsellValue = Math.round(sales * (0.04 + upsell / 100 * 0.22) / 100) * 100;
+  const monthly = MONTHS.map((d, k) => { const season = 1 + 0.35 * Math.cos((d.getMonth() - 11) / 12 * 2 * Math.PI) + (d.getMonth() === 4 ? 0.25 : 0); const trend = k < 12 ? 1 : 1 + yoy; return Math.max(0, sales / 12 / (1 + yoy / 2) * season * trend * (0.8 + r() * 0.4)); });
+  return { id, name, channel, region: pick(REGIONS, r), owner: b2b ? pick(OWNERS, r) : "Client Services", since: b2b ? 2008 + Math.floor(r() * 15) : 2016 + Math.floor(r() * 9), sales, yoy, owned, breadth, returnRate, openTickets, highTickets, daysSinceEngaged, daysSinceOrder, churn, upsell, upsellValue, monthly, doors: b2b ? 1 + Math.floor(r() ** 2 * 6) : null, seed: id };
+}
+// spread raw scores across 0-100 by rank (keeps ordering, fills the matrix like a calibrated model would)
+["churn", "upsell"].forEach(k => { const jr = rng(k.length * 101); [...customers].sort((a, b) => a[k] - b[k]).forEach((c, i, arr) => { c[k] = Math.round(clamp(4 + i / (arr.length - 1) * 92 + (jr() - .5) * 8, 2, 98)); }); });
+customers.forEach(c => { c.upsellValue = Math.round(c.sales * (0.04 + c.upsell / 100 * 0.22) / 100) * 100; });
+customers.forEach(c => { c.riskRevenue = c.sales * c.churn / 100; c.priority = c.riskRevenue * 0.6 + c.upsellValue * 2; });
+
+/* =================== Helpers =================== */
+const $ = s => document.querySelector(s);
+const fmt$ = v => v >= 1e6 ? "$" + (v / 1e6).toFixed(1) + "M" : v >= 1e3 ? "$" + Math.round(v / 1e3) + "K" : "$" + Math.round(v);
+const fmtPct = (v, d = 1) => (v * 100).toFixed(d) + "%";
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const riskBand = v => v >= 65 ? ["high", "High", "!"] : v >= 40 ? ["med", "Medium", "–"] : ["low", "Low", "✓"];
+const statusHTML = v => { const [k, l, i] = riskBand(v); return `<span class="status ${k}"><span class="ico" aria-hidden="true">${i}</span>${l} · ${v}</span>`; };
+const chColor = ch => ch === "Wholesale" ? "var(--series-1)" : "var(--series-2)";
+
+const tt = $("#tt");
+function showTT(e, html) { tt.innerHTML = html; tt.style.opacity = 1; const w = tt.offsetWidth, h = tt.offsetHeight; let x = e.clientX + 14, y = e.clientY - h - 10; if (x + w > innerWidth - 8) x = e.clientX - w - 14; if (y < 8) y = e.clientY + 16; tt.style.left = x + "px"; tt.style.top = y + "px"; }
+function hideTT() { tt.style.opacity = 0; }
+const ttRows = rows => rows.map(([k, v]) => `<div class="tt-row"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join("");
+const svgEl = (tag, attrs) => { const el = document.createElementNS("http://www.w3.org/2000/svg", tag); for (const k in attrs) el.setAttribute(k, attrs[k]); return el; };
+function niceScale(v, n = 4) { const raw = v / n, p = 10 ** Math.floor(Math.log10(raw || 1)), f = raw / p; const step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; return { step, max: Math.max(step, Math.ceil(v / step) * step) }; }
+function niceMax(v) { const p = 10 ** Math.floor(Math.log10(v)); const n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; }
+function tableHTML(head, rows, numCols = []) { return `<table><thead><tr>${head.map((h, i) => `<th class="${numCols.includes(i) ? "num" : ""}">${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="${numCols.includes(i) ? "num" : ""}">${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`; }
+
+/* ---------- Line chart (one axis, crosshair + tooltip) ---------- */
+function lineChart(host, { labels, series, fmt = v => v, height = 220, yMaxHint }) {
+  host.innerHTML = "";
+  const W = Math.max(280, host.clientWidth), H = height, m = { t: 10, r: 12, b: 24, l: 44 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const sc = niceScale(yMaxHint || Math.max(...series.flatMap(s => s.values.filter(v => v != null))) * 1.02), max = sc.max;
+  const x = i => m.l + (labels.length === 1 ? iw / 2 : i / (labels.length - 1) * iw), y = v => m.t + ih - v / max * ih;
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": series.map(s => s.name).join(" vs ") });
+  for (let v = 0; v <= max + 1e-9; v += sc.step) { const yy = y(v), k = v; svg.append(svgEl("line", { x1: m.l, x2: W - m.r, y1: yy, y2: yy, stroke: k === 0 ? "var(--axis)" : "var(--hairline)", "stroke-width": 1 })); const t = svgEl("text", { x: m.l - 8, y: yy + 3, "text-anchor": "end" }); t.textContent = fmt(v); svg.append(t); }
+  const step = Math.ceil(labels.length / Math.max(2, Math.floor(iw / 56)));
+  labels.forEach((l, i) => { if (i % step) return; const t = svgEl("text", { x: x(i), y: H - 6, "text-anchor": "middle" }); t.textContent = l; svg.append(t); });
+  series.forEach(s => { let d = ""; s.values.forEach((v, i) => { if (v == null) return; d += (d ? "L" : "M") + x(i).toFixed(1) + "," + y(v).toFixed(1); }); svg.append(svgEl("path", { d, fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round", "stroke-dasharray": s.dashed ? "0" : "0", opacity: s.muted ? 0.55 : 1 })); });
+  // end label for the primary series
+  const s0 = series[0], li = s0.values.length - 1; const endDot = svgEl("circle", { cx: x(li), cy: y(s0.values[li]), r: 4, fill: s0.color, stroke: "var(--surface)", "stroke-width": 2 }); svg.append(endDot);
+  const cross = svgEl("line", { y1: m.t, y2: m.t + ih, stroke: "var(--axis)", "stroke-width": 1, opacity: 0 }); svg.append(cross);
+  const dots = series.map(s => { const c = svgEl("circle", { r: 4.5, fill: s.color, stroke: "var(--surface)", "stroke-width": 2, opacity: 0 }); svg.append(c); return c; });
+  const hit = svgEl("rect", { x: m.l, y: m.t, width: iw, height: ih, fill: "transparent" }); svg.append(hit);
+  hit.addEventListener("mousemove", e => { const r = svg.getBoundingClientRect(); const px = (e.clientX - r.left) * W / r.width; const i = clamp(Math.round((px - m.l) / iw * (labels.length - 1)), 0, labels.length - 1); cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("opacity", 1); series.forEach((s, k) => { const v = s.values[i]; if (v == null) { dots[k].setAttribute("opacity", 0); return; } dots[k].setAttribute("cx", x(i)); dots[k].setAttribute("cy", y(v)); dots[k].setAttribute("opacity", 1); }); showTT(e, `<div class="tt-title">${esc(labels[i])}</div>` + ttRows(series.filter(s => s.values[i] != null).map(s => [s.name, fmt(s.values[i])]))); });
+  hit.addEventListener("mouseleave", () => { cross.setAttribute("opacity", 0); dots.forEach(d => d.setAttribute("opacity", 0)); hideTT(); });
+  host.append(svg);
+}
+
+/* ---------- Column chart (single series) ---------- */
+function columnChart(host, { labels, values, fmt = v => Math.round(v).toLocaleString(), height = 180, color = "var(--series-1)", highlight = -1, name = "Value", tipExtra }) {
+  host.innerHTML = "";
+  const W = Math.max(260, host.clientWidth), H = height, m = { t: 16, r: 8, b: 24, l: 40 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b; const sc = niceScale(Math.max(1, ...values) * 1.08, height < 140 ? 2 : 4), max = sc.max;
+  const bw = iw / labels.length, gap = Math.max(2, bw * 0.28);
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": name });
+  for (let v = 0; v <= max + 1e-9; v += sc.step) { const yy = m.t + ih - v / max * ih, k = v; svg.append(svgEl("line", { x1: m.l, x2: W - m.r, y1: yy, y2: yy, stroke: k === 0 ? "var(--axis)" : "var(--hairline)" })); const t = svgEl("text", { x: m.l - 8, y: yy + 3, "text-anchor": "end" }); t.textContent = fmt(v); svg.append(t); }
+  const step = Math.ceil(labels.length / Math.max(2, Math.floor(iw / 44)));
+  values.forEach((v, i) => {
+    const h = Math.max(1, v / max * ih), x0 = m.l + i * bw + gap / 2, w = bw - gap, y0 = m.t + ih - h, r = Math.min(4, w / 2, h);
+    const path = svgEl("path", { d: `M${x0},${m.t + ih}V${y0 + r}Q${x0},${y0} ${x0 + r},${y0}H${x0 + w - r}Q${x0 + w},${y0} ${x0 + w},${y0 + r}V${m.t + ih}Z`, fill: color, opacity: highlight >= 0 && i !== highlight ? 0.45 : 1 });
+    svg.append(path);
+    if (i === highlight) { const t = svgEl("text", { x: x0 + w / 2, y: y0 - 5, "text-anchor": "middle", style: "fill:var(--ink);font-weight:600" }); t.textContent = fmt(v); svg.append(t); }
+    if (!(i % step)) { const t = svgEl("text", { x: x0 + w / 2, y: H - 6, "text-anchor": "middle" }); t.textContent = labels[i]; svg.append(t); }
+    const hit = svgEl("rect", { x: m.l + i * bw, y: m.t, width: bw, height: ih, fill: "transparent" });
+    hit.addEventListener("mousemove", e => { path.setAttribute("opacity", 1); showTT(e, `<div class="tt-title">${esc(labels[i])}</div>` + ttRows([[name, fmt(v)], ...(tipExtra ? tipExtra(i) : [])])); });
+    hit.addEventListener("mouseleave", () => { path.setAttribute("opacity", highlight >= 0 && i !== highlight ? 0.45 : 1); hideTT(); });
+    svg.append(hit);
+  });
+  host.append(svg);
+}
+
+/* ---------- Opportunity matrix (scatter, nearest-point hover) ---------- */
+function matrixChart(host, list) {
+  host.innerHTML = "";
+  const W = Math.max(300, host.clientWidth), H = 360, m = { t: 14, r: 16, b: 38, l: 46 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const x = v => m.l + v / 100 * iw, y = v => m.t + ih - v / 100 * ih;
+  const maxS = Math.max(...list.map(c => c.sales));
+  const rad = s => 4 + Math.sqrt(s / maxS) * 14;
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": "Churn risk versus upsell score by customer" });
+  svg.append(svgEl("rect", { x: x(50), y: y(100), width: iw / 2, height: ih / 2, fill: "var(--brand-wash)" }));
+  [0, 25, 50, 75, 100].forEach(v => {
+    svg.append(svgEl("line", { x1: x(v), x2: x(v), y1: m.t, y2: m.t + ih, stroke: v === 0 ? "var(--axis)" : "var(--hairline)" }));
+    svg.append(svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(v), y2: y(v), stroke: v === 0 ? "var(--axis)" : "var(--hairline)" }));
+    let t = svgEl("text", { x: x(v), y: m.t + ih + 14, "text-anchor": "middle" }); t.textContent = v; svg.append(t);
+    t = svgEl("text", { x: m.l - 8, y: y(v) + 3, "text-anchor": "end" }); t.textContent = v; svg.append(t);
+  });
+  let t = svgEl("text", { x: m.l + iw / 2, y: H - 4, "text-anchor": "middle" }); t.textContent = "Churn risk score →"; svg.append(t);
+  t = svgEl("text", { x: 12, y: m.t + ih / 2, "text-anchor": "middle", transform: `rotate(-90 12 ${m.t + ih / 2})` }); t.textContent = "Upsell score →"; svg.append(t);
+  [["Protect & expand", 75, 96], ["Grow", 25, 96], ["Save", 75, 4], ["Maintain", 25, 4]].forEach(([l, xv, yv]) => { const q = svgEl("text", { x: x(xv), y: y(yv) + (yv > 50 ? 8 : -2), "text-anchor": "middle", class: "quad-label" }); q.textContent = l; svg.append(q); });
+  const sorted = [...list].sort((a, b) => b.sales - a.sales);
+  const nodes = sorted.map(c => { const n = svgEl("circle", { cx: x(c.churn), cy: y(c.upsell), r: rad(c.sales), fill: chColor(c.channel), "fill-opacity": 0.72, stroke: "var(--surface)", "stroke-width": 2 }); svg.append(n); return n; });
+  // label the three highest-priority wholesale accounts
+  [...list].filter(c => c.channel === "Wholesale").sort((a, b) => b.priority - a.priority).slice(0, 3).forEach((c, i, arr) => {
+    const right = x(c.churn) < m.l + iw * 0.7; let ly = y(c.upsell) + 3;
+    arr.slice(0, i).forEach(p => { if (Math.abs(x(p.churn) - x(c.churn)) < 160 && Math.abs(p._ly - ly) < 13) ly = p._ly + 13; }); c._ly = ly;
+    const lt = svgEl("text", { x: x(c.churn) + (right ? 1 : -1) * (rad(c.sales) + 5), y: ly, "text-anchor": right ? "start" : "end", style: "fill:var(--ink);font-weight:600;paint-order:stroke;stroke:var(--surface);stroke-width:3px" }); lt.textContent = c.name; svg.append(lt); });
+  const ring = svgEl("circle", { fill: "none", stroke: "var(--ink)", "stroke-width": 1.5, opacity: 0 }); svg.append(ring);
+  const hit = svgEl("rect", { x: m.l, y: m.t, width: iw, height: ih, fill: "transparent", style: "cursor:pointer" }); svg.append(hit);
+  let cur = null;
+  hit.addEventListener("mousemove", e => {
+    const r = svg.getBoundingClientRect(); const px = (e.clientX - r.left) * W / r.width, py = (e.clientY - r.top) * H / r.height;
+    let best = null, bd = 1e9; sorted.forEach(c => { const d = Math.hypot(x(c.churn) - px, y(c.upsell) - py) - rad(c.sales); if (d < bd) { bd = d; best = c; } });
+    if (!best || bd > 18) { cur = null; ring.setAttribute("opacity", 0); hideTT(); return; }
+    cur = best; ring.setAttribute("cx", x(best.churn)); ring.setAttribute("cy", y(best.upsell)); ring.setAttribute("r", rad(best.sales) + 3); ring.setAttribute("opacity", 1);
+    showTT(e, `<div class="tt-title">${esc(best.name)}</div>` + ttRows([["Channel", best.channel], ["Net sales TTM", fmt$(best.sales)], ["Churn risk", best.churn], ["Upsell score", best.upsell], ["Collections", best.breadth + " of 9"]]));
+  });
+  hit.addEventListener("mouseleave", () => { cur = null; ring.setAttribute("opacity", 0); hideTT(); });
+  hit.addEventListener("click", () => { if (cur) openCustomer(cur.id); });
+  host.append(svg);
+}
+
+function sparkline(values) {
+  const W = 84, H = 24, max = Math.max(...values), min = Math.min(...values);
+  const pts = values.map((v, i) => `${(i / (values.length - 1) * (W - 4) + 2).toFixed(1)},${(H - 3 - (v - min) / (max - min || 1) * (H - 6)).toFixed(1)}`).join(" ");
+  const last = pts.split(" ").pop().split(",");
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="var(--series-1)" stroke-width="1.5" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="2.5" fill="var(--series-1)"/></svg>`;
+}
+
+/* =================== Portfolio =================== */
+function filtered() {
+  const ch = $("#f-channel").value, rg = $("#f-region").value, ow = $("#f-owner").value;
+  return customers.filter(c => (ch === "all" || c.channel === ch) && (rg === "all" || c.region === rg) && (ow === "all" || c.owner === ow));
+}
+function nextBestAction(c) {
+  if (c.highTickets > 0 && c.churn >= 65) return "Resolve " + c.highTickets + " high-priority ticket" + (c.highTickets > 1 ? "s" : "") + ", then owner call";
+  if (c.churn >= 65 && c.yoy < -0.15) return "Retention review: orders down " + Math.round(-c.yoy * 100) + "% YoY";
+  if (c.returnRate > 0.11) return "Investigate returns (" + fmtPct(c.returnRate) + ")";
+  const miss = COLLECTIONS.map((n, k) => [n, COLL_POP[k], c.owned[k]]).filter(v => !v[2]).sort((a, b) => b[1] - a[1])[0];
+  if (miss && c.upsell >= 55) return "Pitch " + miss[0] + (c.channel === "Wholesale" ? " assortment" : " — personal styling");
+  if (c.daysSinceEngaged > 90) return "Re-engage: no marketing response in " + c.daysSinceEngaged + " days";
+  return "Maintain cadence";
+}
+function renderPortfolio() {
+  const list = filtered();
+  const total = list.reduce((s, c) => s + c.sales, 0);
+  const prior = list.reduce((s, c) => s + c.sales / (1 + c.yoy), 0);
+  const ret = list.reduce((s, c) => s + c.sales * c.returnRate, 0) / (total || 1);
+  const atRisk = list.filter(c => c.churn >= 65);
+  const riskRev = atRisk.reduce((s, c) => s + c.sales, 0);
+  const upsell = list.reduce((s, c) => s + c.upsellValue, 0);
+  const avgBreadth = list.reduce((s, c) => s + c.breadth, 0) / (list.length || 1);
+  const tickets = list.reduce((s, c) => s + c.openTickets, 0);
+  const g = total / prior - 1;
+  $("#kpis").innerHTML = [
+    ["Net sales · TTM", fmt$(total), `<span class="${g >= 0 ? "up-good" : "up-bad"}">${g >= 0 ? "▲" : "▼"} ${fmtPct(Math.abs(g))}</span> vs. prior year`, true],
+    ["Active customers", list.length.toLocaleString(), `${list.filter(c => c.channel === "Wholesale").length} wholesale · ${list.filter(c => c.channel === "DTC").length} direct`],
+    ["Return rate", fmtPct(ret), "of gross sales, $-weighted"],
+    ["Revenue at risk", fmt$(riskRev), `${atRisk.length} customers with high churn risk`],
+    ["Upsell opportunity", fmt$(upsell), "est. incremental annual sales"],
+    ["Avg. collections / customer", avgBreadth.toFixed(1) + " of 9", `${tickets} open Zendesk tickets`],
+  ].map(([l, v, d, a]) => `<div class="kpi${a ? " accent" : ""}"><div class="label">${l}</div><div class="value">${v}</div><div class="delta">${d}</div></div>`).join("");
+
+  // matrix
+  const chs = [...new Set(list.map(c => c.channel))];
+  $("#matrix-legend").innerHTML = ["Wholesale", "DTC"].filter(c => chs.includes(c)).map(c => `<span><i style="background:${chColor(c)}"></i>${c === "DTC" ? "Direct (B2C)" : "Wholesale (B2B)"}</span>`).join("") + `<span style="color:var(--muted)">Shaded = high risk, high upsell</span>`;
+  matrixChart($("#matrix"), list);
+  $("#matrix-table").innerHTML = tableHTML(["Customer", "Channel", "Net sales", "Churn", "Upsell"], [...list].sort((a, b) => b.priority - a.priority).map(c => [c.name, c.channel, fmt$(c.sales), c.churn, c.upsell]), [2, 3, 4]);
+
+  // breadth histogram
+  const bins = [1, 2, 3, 4, 5, 6, 7].map(n => list.filter(c => n === 7 ? c.breadth >= 7 : c.breadth === n).length);
+  const labels = ["1", "2", "3", "4", "5", "6", "7+"];
+  const single = bins[0] + bins[1];
+  columnChart($("#breadth"), { labels, values: bins, name: "Customers", height: 250, highlight: bins.indexOf(Math.max(...bins)), tipExtra: i => [["Share", fmtPct(bins[i] / (list.length || 1), 0)]] });
+  $("#breadth-table").innerHTML = tableHTML(["Collections", "Customers", "Share"], labels.map((l, i) => [l, bins[i], fmtPct(bins[i] / (list.length || 1), 0)]), [1, 2]);
+  const avgSales = k => { const s = list.filter(c => k(c)); return s.reduce((a, c) => a + c.sales, 0) / (s.length || 1); };
+  $("#breadth-note").innerHTML = `<b>${single}</b> customers (${fmtPct(single / (list.length || 1), 0)}) buy from only 1–2 collections. Customers with 4+ collections average <b>${fmt$(avgSales(c => c.breadth >= 4))}</b> vs. <b>${fmt$(avgSales(c => c.breadth <= 2))}</b>.`;
+
+  // trend
+  const sales = MONTHS.map((_, k) => list.reduce((s, c) => s + c.monthly[k], 0) / 1000);
+  const rets = MONTHS.map((_, k) => list.reduce((s, c) => s + c.monthly[k] * c.returnRate * (0.8 + ((k * 7 + c.id) % 5) / 10), 0) / 1000);
+  $("#trend-legend").innerHTML = `<span><i class="line" style="background:var(--series-1)"></i>Net sales</span><span><i style="background:var(--series-2);border-radius:2px"></i>Returns (separate scale below)</span>`;
+  lineChart($("#trend"), { labels: MONTHS.map(mLabelY), series: [{ name: "Net sales", color: "var(--series-1)", values: sales }], fmt: v => v === 0 ? "$0" : "$" + Math.round(v).toLocaleString() + "K", height: 190 });
+  columnChart($("#trend-returns"), { labels: MONTHS.map(mLabelY), values: rets, name: "Returns", color: "var(--series-2)", fmt: v => v === 0 ? "$0" : "$" + Math.round(v) + "K", height: 110, tipExtra: i => [["% of sales", fmtPct(rets[i] / sales[i])]] });
+  $("#trend-table").innerHTML = tableHTML(["Month", "Net sales ($K)", "Returns ($K)", "Return %"], MONTHS.map((d, k) => [mLabelY(d), Math.round(sales[k]).toLocaleString(), Math.round(rets[k]).toLocaleString(), fmtPct(rets[k] / sales[k])]), [1, 2, 3]);
+
+  // penetration
+  const pen = COLLECTIONS.map((n, k) => [n, list.filter(c => c.owned[k]).length / (list.length || 1)]);
+  $("#penetration").innerHTML = pen.map(([n, p]) => `<div class="hbar"><span class="name" title="${esc(n)}">${esc(n)}</span><span class="track"><span class="fill" style="width:${(p * 100).toFixed(1)}%"></span></span><span class="val">${fmtPct(p, 0)}</span></div>`).join("");
+
+  renderAccounts(list);
+}
+function renderAccounts(list) {
+  const key = $("#sortBy").value;
+  const sorted = [...list].sort((a, b) => key === "churn" ? b.churn - a.churn : key === "upsell" ? b.upsell - a.upsell : key === "sales" ? b.sales - a.sales : b.priority - a.priority).slice(0, 12);
+  $("#accounts").innerHTML = `<thead><tr><th>Customer</th><th>Channel</th><th class="num">Net sales TTM</th><th>12-mo trend</th><th>Collections</th><th class="num">Return rate</th><th class="num">Open tickets</th><th>Churn risk</th><th>Upsell</th><th>Next best action</th></tr></thead><tbody>` +
+    sorted.map(c => `<tr class="clickable" tabindex="0" data-id="${c.id}">
+      <td><div class="acct-name">${esc(c.name)}</div><div class="acct-meta">${esc(c.region)} · ${esc(c.owner)}</div></td>
+      <td><span class="chip dot" style="--c:${chColor(c.channel)}">${c.channel === "DTC" ? "Direct" : "Wholesale"}</span></td>
+      <td class="num">${fmt$(c.sales)} <div class="acct-meta ${c.yoy >= 0 ? "up-good" : "up-bad"}">${c.yoy >= 0 ? "▲" : "▼"} ${fmtPct(Math.abs(c.yoy), 0)}</div></td>
+      <td>${sparkline(c.monthly.slice(12))}</td>
+      <td><span class="dots" title="${c.breadth} of 9 collections">${COLLECTIONS.map((_, k) => `<i class="${c.owned[k] ? "on" : ""}"></i>`).join("")}</span> <span class="acct-meta">${c.breadth}/9</span></td>
+      <td class="num">${fmtPct(c.returnRate)}</td>
+      <td class="num">${c.openTickets}${c.highTickets ? ` <span class="acct-meta up-bad">(${c.highTickets} high)</span>` : ""}</td>
+      <td>${statusHTML(c.churn)}</td>
+      <td><span class="meter"><span class="bar"><b style="width:${c.upsell}%"></b></span><span>${c.upsell}</span></span><div class="acct-meta">${fmt$(c.upsellValue)} est.</div></td>
+      <td class="nba">${esc(nextBestAction(c))}</td></tr>`).join("") + `</tbody>`;
+  $("#accounts").querySelectorAll("tr[data-id]").forEach(tr => { const go = () => openCustomer(+tr.dataset.id); tr.addEventListener("click", go); tr.addEventListener("keydown", e => { if (e.key === "Enter") go(); }); });
+}
+
+/* =================== Customer 360 =================== */
+let currentId = null;
+function openCustomer(id) { currentId = id; setView("customer"); }
+function renderCustomer() {
+  const c = customers.find(x => x.id === currentId) || [...customers].sort((a, b) => b.priority - a.priority)[0];
+  currentId = c.id;
+  $("#custPicker").innerHTML = [...customers].sort((a, b) => a.channel.localeCompare(b.channel) || a.name.localeCompare(b.name)).map(x => `<option value="${x.id}" ${x.id === c.id ? "selected" : ""}>${esc(x.name)} — ${x.channel === "DTC" ? "Direct" : "Wholesale"}</option>`).join("");
+  const r = rng(c.seed * 31 + 5);
+  const [bk, bl] = riskBand(c.churn);
+  const ltv = c.sales * (2026 - c.since) * (0.55 + r() * 0.3);
+  $("#profile").innerHTML = `
+    <div><div class="label">${c.channel === "DTC" ? "Direct client (B2C)" : "Wholesale account (B2B)"}</div><h2>${esc(c.name)}</h2>
+      <div class="acct-meta">${esc(c.region)} · Owner: ${esc(c.owner)} · Customer since ${c.since}${c.doors ? " · " + c.doors + " door" + (c.doors > 1 ? "s" : "") : ""}</div></div>
+    <div><div class="label">Net sales · TTM</div><div class="big">${fmt$(c.sales)}</div><div class="acct-meta ${c.yoy >= 0 ? "up-good" : "up-bad"}">${c.yoy >= 0 ? "▲" : "▼"} ${fmtPct(Math.abs(c.yoy))} vs. prior year · LTV ${fmt$(ltv)}</div></div>
+    <div><div class="label">Churn risk</div><div class="big">${c.churn}</div>${statusHTML(c.churn)}</div>
+    <div><div class="label">Upsell score</div><div class="big">${c.upsell}</div><div class="acct-meta">${fmt$(c.upsellValue)} est. annual opportunity</div></div>
+    <div><div class="label">SKU diversification</div><div class="big">${c.breadth}<span style="font-size:14px;color:var(--muted)"> / 9</span></div><span class="dots">${COLLECTIONS.map((_, k) => `<i class="${c.owned[k] ? "on" : ""}"></i>`).join("")}</span></div>`;
+
+  // sales TY vs LY
+  const ty = c.monthly.slice(12).map(v => v / 1000), ly = c.monthly.slice(0, 12).map(v => v / 1000);
+  const labs = MONTHS.slice(12).map(mLabel);
+  $("#c-sales-legend").innerHTML = `<span><i class="line" style="background:var(--series-1)"></i>This year</span><span><i class="line" style="background:var(--series-3)"></i>Last year</span>`;
+  lineChart($("#c-sales"), { labels: labs, series: [{ name: "This year", color: "var(--series-1)", values: ty }, { name: "Last year", color: "var(--series-3)", values: ly }], fmt: v => v === 0 ? "$0" : "$" + (v >= 10 ? Math.round(v) : v.toFixed(1)) + "K", height: 240 });
+  $("#c-sales-table").innerHTML = tableHTML(["Month", "This year ($K)", "Last year ($K)", "Change"], labs.map((l, i) => [l, ty[i].toFixed(1), ly[i].toFixed(1), fmtPct(ty[i] / ly[i] - 1)]), [1, 2, 3]);
+
+  // drivers
+  const drivers = [];
+  if (c.yoy < -0.05) drivers.push(["high", "!", `Net sales down ${fmtPct(-c.yoy, 0)} year over year`, "+" + Math.round(-c.yoy * 70)]);
+  else drivers.push(["low", "✓", `Net sales up ${fmtPct(Math.max(0, c.yoy), 0)} year over year`, "−" + Math.round(Math.max(1, c.yoy * 20))]);
+  if (c.returnRate > 0.08) drivers.push(["med", "–", `Return rate ${fmtPct(c.returnRate)} vs. 6.8% portfolio average`, "+" + Math.round((c.returnRate - 0.06) * 180)]);
+  if (c.highTickets) drivers.push(["high", "!", `${c.highTickets} high-priority Zendesk ticket${c.highTickets > 1 ? "s" : ""} open`, "+" + c.highTickets * 8]);
+  else if (c.openTickets) drivers.push(["med", "–", `${c.openTickets} open Zendesk ticket${c.openTickets > 1 ? "s" : ""}`, "+" + c.openTickets * 2]);
+  if (c.daysSinceEngaged > 60) drivers.push(["med", "–", `No marketing engagement in ${c.daysSinceEngaged} days`, "+" + Math.round(c.daysSinceEngaged * 0.12)]);
+  else drivers.push(["low", "✓", `Engaged with marketing ${c.daysSinceEngaged} days ago`, "±0"]);
+  if (c.breadth <= 2) drivers.push(["med", "–", `Concentrated in ${c.breadth} collection${c.breadth > 1 ? "s" : ""} — low stickiness`, "+" + (5 - c.breadth) * 2]);
+  $("#c-drivers").innerHTML = drivers.map(([k, i, t, v]) => `<li><span class="status ${k}"><span class="ico" aria-hidden="true">${i}</span></span><span>${esc(t)}</span><span class="impact">${v} pts</span></li>`).join("") + `<li style="grid-template-columns:1fr"><span class="note" style="margin:0">Illustrative scoring. Real model would be trained in a Fabric notebook and explain drivers per customer.</span></li>`;
+
+  // mix
+  const shares = COLLECTIONS.map((n, k) => c.owned[k] ? (k === 0 ? 3 : 1) * (0.4 + r()) : 0); const tot = shares.reduce((a, b) => a + b, 0);
+  const mixRows = COLLECTIONS.map((n, k) => ({ n, s: shares[k] / tot, owned: c.owned[k], pop: COLL_POP[k] })).sort((a, b) => b.s - a.s || b.pop - a.pop);
+  $("#c-mix").innerHTML = mixRows.map(m => m.owned
+    ? `<div class="hbar"><span class="name" title="${esc(m.n)}">${esc(m.n)}</span><span class="track"><span class="fill" style="width:${(m.s * 100).toFixed(1)}%"></span></span><span class="val">${fmtPct(m.s, 0)}</span></div>`
+    : `<div class="hbar gap"><span class="name" title="${esc(m.n)}">${esc(m.n)}</span><span class="track" title="Not purchased — ${fmtPct(m.pop, 0)} of peers buy it"></span><span class="val acct-meta" title="Share of peer customers who buy it">${fmtPct(m.pop, 0)} peers</span></div>`).join("");
+
+  // recs
+  const gaps = COLLECTIONS.map((n, k) => ({ n, pop: COLL_POP[k], owned: c.owned[k] })).filter(g => !g.owned).sort((a, b) => b.pop - a.pop).slice(0, 3);
+  const recs = gaps.map((g, i) => ({ t: (c.channel === "Wholesale" ? "Add " + g.n + " to assortment" : "Introduce " + g.n), d: `${fmtPct(Math.min(0.95, g.pop + 0.08), 0)} of similar ${c.channel === "Wholesale" ? "retailers" : "clients"} buy it alongside ${esc(COLLECTIONS[0])}.`, v: Math.round(c.upsellValue * [0.5, 0.3, 0.2][i] / 100) * 100 }));
+  if (c.channel === "Wholesale" && c.doors && c.doors < 4) recs.push({ t: "Expand to additional doors", d: "Top-quartile sell-through across current doors supports expansion.", v: Math.round(c.sales * 0.12 / 100) * 100 });
+  $("#c-recs").innerHTML = recs.length ? recs.map(x => `<div class="rec"><div class="t">${esc(x.t)}</div><div class="d">${x.d}</div><div class="v">Est. ${fmt$(x.v)} / year</div></div>`).join("") : `<div class="note">Buys all collections — focus on retention and new launches.</div>`;
+
+  // returns
+  const reasons = [["Sizing / fit", 0.34], ["Changed mind", 0.22], ["Quality / defect", 0.14 + (c.highTickets ? 0.1 : 0)], ["Damaged in transit", 0.09], ["Other", 0.12]];
+  const rs = reasons.reduce((s, x) => s + x[1], 0);
+  $("#c-returns").innerHTML = `<div class="mini-stats" style="grid-template-columns:1fr 1fr"><div><div class="label">Return rate</div><div class="v ${c.returnRate > 0.08 ? "up-bad" : ""}">${fmtPct(c.returnRate)}</div></div><div><div class="label">Returned $</div><div class="v">${fmt$(c.sales * c.returnRate)}</div></div></div>
+    <div class="label" style="font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:8px">Top reasons</div>
+    <div class="hbars">${reasons.map(([n, v]) => `<div class="hbar" style="grid-template-columns:1fr 60px 34px"><span class="name">${n}</span><span class="track"><span class="fill" style="width:${(v / rs * 100 / 0.45).toFixed(0)}%;max-width:100%;background:var(--series-2)"></span></span><span class="val">${fmtPct(v / rs, 0)}</span></div>`).join("")}</div>`;
+
+  // marketing
+  const touches = MONTHS.slice(12).map((d, i) => Math.round(2 + r() * 6 + (d.getMonth() >= 9 ? 3 : 0)));
+  const engaged = touches.map((t, i) => i >= 12 - Math.floor(c.daysSinceEngaged / 30) ? 0 : Math.round(t * (0.2 + r() * 0.5)));
+  const openRate = engaged.reduce((a, b) => a + b, 0) / touches.reduce((a, b) => a + b, 0);
+  $("#c-mkt-stats").innerHTML = `<div><div class="label">Touches</div><div class="v">${touches.reduce((a, b) => a + b, 0)}</div></div><div><div class="label">Engagement</div><div class="v">${fmtPct(openRate, 0)}</div></div><div><div class="label">Last engaged</div><div class="v">${c.daysSinceEngaged}d ago</div></div>`;
+  columnChart($("#c-mkt"), { labels: labs, values: engaged, name: "Engaged touches", color: "var(--series-3)", height: 170, tipExtra: i => [["Total touches", touches[i]], ["Channels", c.channel === "Wholesale" ? "Email · Co-op · Trunk show" : "Email · SMS · Events"]] });
+  $("#c-mkt-table").innerHTML = tableHTML(["Month", "Touches", "Engaged"], labs.map((l, i) => [l, touches[i], engaged[i]]), [1, 2]);
+
+  // zendesk
+  const subjects = ["Order shipment delayed", "Clasp repair request", "Invoice discrepancy", "Co-op marketing funds", "Resize request", "Missing items in shipment", "Warranty claim", "Display fixture request"];
+  const zd = Array.from({ length: Math.max(3, c.openTickets + 3) }, (_, i) => { const open = i < c.openTickets; const pr = open && i < c.highTickets ? "High" : pick(["Normal", "Normal", "Low"], r); return { id: 48210 + c.id * 13 + i * 7, s: pick(subjects, r), pr, status: open ? pick(["Open", "Pending"], r) : "Solved", age: open ? 2 + Math.floor(r() * 20) : 20 + Math.floor(r() * 200) }; });
+  const solved = zd.filter(t => t.status === "Solved").length;
+  $("#c-zd-stats").innerHTML = `<div><div class="label">Open</div><div class="v ${c.highTickets ? "up-bad" : ""}">${c.openTickets}</div></div><div><div class="label">Avg. resolution</div><div class="v">${(1.5 + r() * 4).toFixed(1)} days</div></div><div><div class="label">CSAT</div><div class="v">${Math.round(78 + r() * 20 - c.highTickets * 6)}%</div></div>`;
+  $("#c-zd").innerHTML = `<thead><tr><th>Ticket</th><th>Subject</th><th>Priority</th><th>Status</th><th class="num">Age</th></tr></thead><tbody>` + zd.slice(0, 6).map(t => `<tr><td class="acct-meta">#${t.id}</td><td>${esc(t.s)}</td><td>${t.pr === "High" ? `<span class="status high"><span class="ico" aria-hidden="true">!</span>High</span>` : `<span class="chip">${t.pr}</span>`}</td><td>${t.status === "Solved" ? `<span class="status low"><span class="ico" aria-hidden="true">✓</span>Solved</span>` : `<span class="chip">${t.status}</span>`}</td><td class="num">${t.age}d</td></tr>`).join("") + `</tbody>`;
+
+  // feed
+  const SRC = { Order: ["OR", "var(--series-1)"], Return: ["RT", "var(--series-2)"], Marketing: ["MK", "var(--series-3)"], Zendesk: ["ZD", "#6b6b6b"] };
+  const events = [];
+  for (let i = 0; i < 4; i++) events.push({ d: 3 + c.daysSinceOrder + i * (20 + Math.floor(r() * 30)), src: "Order", t: `Order #SO-${71200 + c.id * 3 + i}`, m: `${fmt$(c.sales / (6 + r() * 8))} · ${pick(COLLECTIONS.filter((_, k) => c.owned[k]), r)}` });
+  for (let i = 0; i < 2; i++) events.push({ d: 10 + Math.floor(r() * 120), src: "Return", t: "Return authorized", m: `${pick(reasons, r)[0]} · ${fmt$(c.sales * c.returnRate / (3 + r() * 4))}` });
+  for (let i = 0; i < 3; i++) events.push({ d: c.daysSinceEngaged + i * 25, src: "Marketing", t: pick(c.channel === "Wholesale" ? ["Opened: Holiday sell-in email", "Attended: Spring trunk show", "Co-op ad placed"] : ["Opened: New Arrivals email", "Clicked: Caviar Icon launch", "RSVP: In-store event"], r), m: "Campaign engagement" });
+  zd.slice(0, 3).forEach(t => events.push({ d: t.age, src: "Zendesk", t: `Ticket #${t.id} · ${t.s}`, m: `${t.pr} priority · ${t.status}` }));
+  events.sort((a, b) => a.d - b.d);
+  const today = new Date(2026, 8, 29);
+  $("#c-feed").innerHTML = events.slice(0, 10).map(e => { const dt = new Date(today - e.d * 864e5); return `<li><span class="when">${dt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" })}</span><span class="src" style="background:${SRC[e.src][1]}" title="${e.src}">${SRC[e.src][0]}</span><span class="what">${esc(e.t)}<div class="m">${e.src} · ${esc(e.m)}</div></span></li>`; }).join("");
+}
+
+/* =================== Wiring =================== */
+function setView(v) {
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.view === v));
+  $("#view-portfolio").classList.toggle("hidden", v !== "portfolio");
+  $("#view-customer").classList.toggle("hidden", v !== "customer");
+  try { localStorage.setItem("c360-view", v); } catch (e) {}
+  render(); window.scrollTo({ top: 0 });
+}
+function render() { if (!$("#view-portfolio").classList.contains("hidden")) renderPortfolio(); else renderCustomer(); }
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => setView(t.dataset.view)));
+["#f-channel", "#f-region", "#f-owner", "#f-range"].forEach(s => $(s).addEventListener("change", render));
+$("#sortBy").addEventListener("change", () => renderAccounts(filtered()));
+$("#custPicker").addEventListener("change", e => { currentId = +e.target.value; renderCustomer(); });
+$("#backBtn").addEventListener("click", () => setView("portfolio"));
+document.querySelectorAll("[data-table]").forEach(b => b.addEventListener("click", () => { const id = b.dataset.table; const tbl = $("#" + id + "-table"); const show = tbl.classList.contains("hidden"); tbl.classList.toggle("hidden", !show); document.querySelectorAll(`#${id}, #${id}-legend, #${id}-returns`).forEach(el => el.classList.toggle("hidden", show)); b.textContent = show ? "Chart view" : "Table view"; }));
+$("#themeBtn").addEventListener("click", () => { const root = document.documentElement; const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; root.dataset.theme = dark ? "light" : "dark"; render(); });
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+let start = "portfolio"; try { start = localStorage.getItem("c360-view") || "portfolio"; } catch (e) {}
+setView(start);
+</script>
+</body>
+</html>
