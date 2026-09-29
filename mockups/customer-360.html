@@ -6,54 +6,54 @@
 <title>Customer 360 Mockup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ---------- Tokens: LAGOS-inspired (Montserrat, black/white, plum, warm off-white, gold) ---------- */
+/* ---------- Tokens: Contoso Hardware (Barlow, charcoal, warm concrete, safety orange, steel blue) ---------- */
 :root {
   color-scheme: light;
-  --page: #f9f8f7;
+  --page: #f4f3f0;
   --surface: #ffffff;
-  --surface-2: #f4f2f0;
-  --ink: #000000;
-  --ink-2: #4a4748;
-  --muted: #7d7a7b;
-  --hairline: #e6e2df;
-  --axis: #c9c4c0;
-  --brand: #4b3048;          /* LAGOS plum */
-  --brand-ink: #ffffff;
-  --brand-wash: #f3eef2;
-  --gold: #b07a12;
-  --series-1: #8b3d80;       /* plum  — validated light, all-pairs */
-  --series-2: #b07a12;       /* gold */
-  --series-3: #1a7fb8;       /* blue */
-  --good: #0ca30c; --good-ink: #006300;
-  --warning: #fab219; --warning-ink: #8a5a00;
+  --surface-2: #eceae5;
+  --ink: #1d2025;
+  --ink-2: #41464d;
+  --muted: #5b6067;
+  --hairline: #dcd9d3;
+  --axis: #c3bfb8;
+  --brand: #1d2025;          /* charcoal app bar */
+  --brand-ink: #f4f3f0;
+  --brand-wash: #fbeee6;
+  --gold: #c2410c;           /* accent: safety orange */
+  --series-1: #1c6fb8;       /* steel blue — validated light, all-pairs */
+  --series-2: #d9480f;       /* safety orange */
+  --series-3: #1c6fb8;
+  --good: #2b8a3e; --good-ink: #2b8a3e;
+  --warning: #e8a317; --warning-ink: #8a5a00;
   --serious: #ec835a; --serious-ink: #a4461d;
-  --critical: #d03b3b; --critical-ink: #b02a2a;
+  --critical: #c92a2a; --critical-ink: #c92a2a;
   --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(75,48,72,.05);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --page: #121011; --surface: #1c1a1b; --surface-2: #252224;
-    --ink: #ffffff; --ink-2: #cfc9cc; --muted: #928c8f;
-    --hairline: #2f2b2d; --axis: #45403f;
-    --brand: #6d4868; --brand-ink: #ffffff; --brand-wash: #2a2029;
-    --gold: #d9a441;
-    --series-1: #c46fb6; --series-2: #b8841a; --series-3: #1f6fb0;
-    --good-ink: #3fcf3f; --warning-ink: #fab219; --serious-ink: #ec835a; --critical-ink: #ff7a7a;
+    --page: #141619; --surface: #1d2025; --surface-2: #25282d;
+    --ink: #eef0f2; --ink-2: #c8ccd1; --muted: #a3a8ae;
+    --hairline: #33373d; --axis: #41464d;
+    --brand: #0c0d0f; --brand-ink: #eef0f2; --brand-wash: #2e2019;
+    --gold: #e8590c;
+    --series-1: #3d8bd4; --series-2: #e8590c; --series-3: #3d8bd4;
+    --good-ink: #51cf66; --warning-ink: #fab219; --serious-ink: #ec835a; --critical-ink: #ff7a7a;
     --shadow: none;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #121011; --surface: #1c1a1b; --surface-2: #252224;
-  --ink: #ffffff; --ink-2: #cfc9cc; --muted: #928c8f;
-  --hairline: #2f2b2d; --axis: #45403f;
-  --brand: #6d4868; --brand-ink: #ffffff; --brand-wash: #2a2029;
-  --gold: #d9a441;
-  --series-1: #c46fb6; --series-2: #b8841a; --series-3: #1f6fb0;
-  --good-ink: #3fcf3f; --warning-ink: #fab219; --serious-ink: #ec835a; --critical-ink: #ff7a7a;
+  --page: #141619; --surface: #1d2025; --surface-2: #25282d;
+  --ink: #eef0f2; --ink-2: #c8ccd1; --muted: #a3a8ae;
+  --hairline: #33373d; --axis: #41464d;
+  --brand: #0c0d0f; --brand-ink: #eef0f2; --brand-wash: #2e2019;
+  --gold: #e8590c;
+  --series-1: #3d8bd4; --series-2: #e8590c; --series-3: #3d8bd4;
+  --good-ink: #51cf66; --warning-ink: #fab219; --serious-ink: #ec835a; --critical-ink: #ff7a7a;
   --shadow: none;
 }
 
@@ -61,7 +61,7 @@
 html, body { margin: 0; }
 body {
   background: var(--page); color: var(--ink);
-  font-family: Montserrat, "Segoe UI", system-ui, sans-serif;
+  font-family: Barlow, "Segoe UI", system-ui, sans-serif;
   font-size: 13px; font-weight: 500; letter-spacing: .2px; line-height: 1.45;
 }
 button { font: inherit; color: inherit; }
@@ -69,16 +69,16 @@ button { font: inherit; color: inherit; }
 
 /* ---------- Header ---------- */
 .promo { background: var(--brand); color: var(--brand-ink); text-align: center; font-size: 11px; padding: 7px 16px; letter-spacing: 2px; text-transform: uppercase; }
-.brandbar { background: var(--surface); border-bottom: 1px solid var(--hairline); }
+.brandbar { background: var(--surface); border-bottom: 4px solid var(--gold); }
 .brandbar-inner { max-width: 1320px; margin: 0 auto; padding: 18px 24px 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
-.wordmark { font-size: 30px; font-weight: 400; letter-spacing: 12px; text-align: center; padding-left: 12px; }
+.wordmark { font-family: "Barlow Condensed", Barlow, sans-serif; font-size: 28px; font-weight: 700; letter-spacing: 6px; text-align: center; text-transform: uppercase; }
 .product { font-size: 11px; color: var(--muted); }
 .header-actions { justify-self: end; display: flex; gap: 8px; }
 .icon-btn { border: 1px solid var(--hairline); background: var(--surface); border-radius: 2px; padding: 6px 10px; cursor: pointer; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
 .icon-btn:hover { border-color: var(--ink); }
 .tabs { max-width: 1320px; margin: 0 auto; padding: 14px 24px 0; display: flex; justify-content: center; gap: 36px; }
 .tab { background: none; border: 0; padding: 10px 2px 12px; cursor: pointer; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 2px solid transparent; color: var(--ink-2); }
-.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--gold); }
 
 /* ---------- Layout ---------- */
 main { max-width: 1320px; margin: 0 auto; padding: 20px 24px 64px; }
@@ -200,7 +200,7 @@ tbody tr.clickable:focus-visible { outline: 2px solid var(--brand); outline-offs
   main, .brandbar-inner, .tabs { padding-left: 16px; padding-right: 16px; }
   .brandbar-inner { grid-template-columns: 1fr auto; }
   .brandbar-inner .product { display: none; }
-  .wordmark { text-align: left; font-size: 24px; letter-spacing: 8px; padding-left: 0; }
+  .wordmark { text-align: left; font-size: 20px; letter-spacing: 2px; padding-left: 0; white-space: nowrap; }
   .hbar { grid-template-columns: 96px 1fr 52px; }
   .filter select { min-width: 0; width: 100%; }
   .filter { flex: 1 1 140px; }
@@ -211,8 +211,8 @@ tbody tr.clickable:focus-visible { outline: 2px solid var(--brand); outline-offs
 <div class="promo">Customer 360 · Design mockup · Illustrative data only</div>
 <header class="brandbar">
   <div class="brandbar-inner">
-    <div class="product caps">Customer Intelligence</div>
-    <div class="wordmark" aria-label="LAGOS">LAGOS</div>
+    <div class="product caps">Customer 360</div>
+    <div class="wordmark">Contoso Hardware</div>
     <div class="header-actions"><button class="icon-btn" id="themeBtn" type="button">Theme</button></div>
   </div>
   <nav class="tabs" role="tablist">
@@ -232,7 +232,7 @@ tbody tr.clickable:focus-visible { outline: 2px solid var(--brand); outline-offs
     <div class="filter"><label for="f-owner">Owner</label>
       <select id="f-owner"><option value="all">All owners</option><option>J. Ramirez</option><option>K. Osei</option><option>M. Chen</option><option>Client Services</option></select></div>
     <div class="spacer"></div>
-    <div class="stamp">Refreshed daily from Fabric · last run 06:00</div>
+    <div class="stamp">Mockup · illustrative data · real app runs on Fabric</div>
   </div>
 
   <!-- ================= PORTFOLIO ================= -->
@@ -247,7 +247,7 @@ tbody tr.clickable:focus-visible { outline: 2px solid var(--brand); outline-offs
         <div class="table-wrap hidden" id="matrix-table"></div>
       </div>
       <div class="card span-5">
-        <div class="card-head"><div><h3 class="card-title">SKU diversification</h3><div class="card-sub">Customers by number of collections purchased (of 9)</div></div>
+        <div class="card-head"><div><h3 class="card-title">SKU diversification</h3><div class="card-sub">Customers by number of product lines purchased (of 9)</div></div>
           <button class="link-btn" data-table="breadth">Table view</button></div>
         <div class="chart" id="breadth"></div>
         <div class="table-wrap hidden" id="breadth-table"></div>
@@ -263,7 +263,7 @@ tbody tr.clickable:focus-visible { outline: 2px solid var(--brand); outline-offs
         <div class="table-wrap hidden" id="trend-table"></div>
       </div>
       <div class="card span-6">
-        <div class="card-head"><div><h3 class="card-title">Collection penetration</h3><div class="card-sub">% of active customers who bought each collection · whitespace = upsell</div></div></div>
+        <div class="card-head"><div><h3 class="card-title">Product line penetration</h3><div class="card-sub">% of active customers who bought each product line · whitespace = upsell</div></div></div>
         <div class="hbars" id="penetration"></div>
       </div>
 
@@ -297,7 +297,7 @@ tbody tr.clickable:focus-visible { outline: 2px solid var(--brand); outline-offs
       </div>
 
       <div class="card span-5">
-        <div class="card-head"><div><h3 class="card-title">SKU mix & whitespace</h3><div class="card-sub">Share of TTM sales by collection · hatched = not yet purchased</div></div></div>
+        <div class="card-head"><div><h3 class="card-title">Product line mix & whitespace</h3><div class="card-sub">Share of TTM sales by product line · hatched = not yet purchased</div></div></div>
         <div class="hbars" id="c-mix"></div>
       </div>
       <div class="card span-4">
@@ -338,13 +338,13 @@ const R = rng(42);
 const pick = (a, r = R) => a[Math.floor(r() * a.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-const COLLECTIONS = ["Signature Caviar", "Caviar Gold", "Smart Caviar", "KSL", "Luna Pearl", "High Bar", "Men's", "Watches", "Bridal"];
+const COLLECTIONS = ["Fasteners", "Hand Tools", "Power Tools", "Widgets", "Smart Widgets", "Plumbing", "Electrical", "Storage & Org.", "Safety Gear"];
 const COLL_POP = [0.92, 0.66, 0.58, 0.44, 0.38, 0.27, 0.22, 0.14, 0.11];
 const MONTHS = (() => { const out = []; const d = new Date(2024, 9, 1); for (let i = 0; i < 24; i++) { out.push(new Date(d.getFullYear(), d.getMonth() + i, 1)); } return out; })();
 const mLabel = d => d.toLocaleString("en-US", { month: "short" });
 const mLabelY = d => d.toLocaleString("en-US", { month: "short", year: "2-digit" });
 
-const B2B = ["Bergstrom Fine Jewelers", "Harlow & Finch", "Marisol Jewelers", "Castellan Diamond Co.", "Whitfield Jewelers", "Ondine Boutique", "Pemberton & Sons", "Aurelia Fine Jewelry", "Kessler Jewelers", "Brightwater Gems", "Solano Jewelers", "Thornbury Gold", "Velloso & Co.", "Northgate Jewelers", "Larkspur Fine Jewelry", "Delacroix Jewelers", "Hollis & Vane", "Seabrook Jewelers", "Ashford Diamonds", "Meridian Fine Jewelry", "Carrow Jewelers", "Lindqvist & Daughters", "Palisade Gems", "Rosen Jewelers", "Tidewater Jewelers", "Emberly & Co."];
+const B2B = ["Fairhaven Hardware", "Beacon Tool & Supply", "Alder Building Supply", "Harlow Supply Co.", "Castellan Industrial", "Whitfield Lumber & Hardware", "Northgate Contractors Supply", "Pemberton Distribution", "Kessler Hardware", "Brightwater Supply Co.", "Solano Tool & Supply", "Thornbury Building Supply", "Velloso Industrial", "Larkspur Hardware", "Delacroix Distribution", "Hollis Contractors Supply", "Seabrook Lumber & Hardware", "Ashford Supply Co.", "Meridian Tool & Supply", "Carrow Hardware", "Lindqvist Industrial", "Palisade Building Supply", "Rosen Hardware", "Tidewater Supply Co.", "Emberly Distribution", "Garrison Hardware"];
 const REGIONS = ["Northeast", "Southeast", "Central", "West"];
 const OWNERS = ["J. Ramirez", "K. Osei", "M. Chen"];
 
@@ -500,7 +500,7 @@ function nextBestAction(c) {
   if (c.churn >= 65 && c.yoy < -0.15) return "Retention review: orders down " + Math.round(-c.yoy * 100) + "% YoY";
   if (c.returnRate > 0.11) return "Investigate returns (" + fmtPct(c.returnRate) + ")";
   const miss = COLLECTIONS.map((n, k) => [n, COLL_POP[k], c.owned[k]]).filter(v => !v[2]).sort((a, b) => b[1] - a[1])[0];
-  if (miss && c.upsell >= 55) return "Pitch " + miss[0] + (c.channel === "Wholesale" ? " assortment" : " — personal styling");
+  if (miss && c.upsell >= 55) return "Pitch " + miss[0] + (c.channel === "Wholesale" ? " program" : " bundle");
   if (c.daysSinceEngaged > 90) return "Re-engage: no marketing response in " + c.daysSinceEngaged + " days";
   return "Maintain cadence";
 }
@@ -521,7 +521,7 @@ function renderPortfolio() {
     ["Return rate", fmtPct(ret), "of gross sales, $-weighted"],
     ["Revenue at risk", fmt$(riskRev), `${atRisk.length} customers with high churn risk`],
     ["Upsell opportunity", fmt$(upsell), "est. incremental annual sales"],
-    ["Avg. collections / customer", avgBreadth.toFixed(1) + " of 9", `${tickets} open Zendesk tickets`],
+    ["Avg. product lines / customer", avgBreadth.toFixed(1) + " of 9", `${tickets} open Zendesk tickets`],
   ].map(([l, v, d, a]) => `<div class="kpi${a ? " accent" : ""}"><div class="label">${l}</div><div class="value">${v}</div><div class="delta">${d}</div></div>`).join("");
 
   // matrix
@@ -537,7 +537,7 @@ function renderPortfolio() {
   columnChart($("#breadth"), { labels, values: bins, name: "Customers", height: 250, highlight: bins.indexOf(Math.max(...bins)), tipExtra: i => [["Share", fmtPct(bins[i] / (list.length || 1), 0)]] });
   $("#breadth-table").innerHTML = tableHTML(["Collections", "Customers", "Share"], labels.map((l, i) => [l, bins[i], fmtPct(bins[i] / (list.length || 1), 0)]), [1, 2]);
   const avgSales = k => { const s = list.filter(c => k(c)); return s.reduce((a, c) => a + c.sales, 0) / (s.length || 1); };
-  $("#breadth-note").innerHTML = `<b>${single}</b> customers (${fmtPct(single / (list.length || 1), 0)}) buy from only 1–2 collections. Customers with 4+ collections average <b>${fmt$(avgSales(c => c.breadth >= 4))}</b> vs. <b>${fmt$(avgSales(c => c.breadth <= 2))}</b>.`;
+  $("#breadth-note").innerHTML = `<b>${single}</b> customers (${fmtPct(single / (list.length || 1), 0)}) buy from only 1–2 product lines. Customers with 4+ lines average <b>${fmt$(avgSales(c => c.breadth >= 4))}</b> vs. <b>${fmt$(avgSales(c => c.breadth <= 2))}</b>.`;
 
   // trend
   const sales = MONTHS.map((_, k) => list.reduce((s, c) => s + c.monthly[k], 0) / 1000);
@@ -556,13 +556,13 @@ function renderPortfolio() {
 function renderAccounts(list) {
   const key = $("#sortBy").value;
   const sorted = [...list].sort((a, b) => key === "churn" ? b.churn - a.churn : key === "upsell" ? b.upsell - a.upsell : key === "sales" ? b.sales - a.sales : b.priority - a.priority).slice(0, 12);
-  $("#accounts").innerHTML = `<thead><tr><th>Customer</th><th>Channel</th><th class="num">Net sales TTM</th><th>12-mo trend</th><th>Collections</th><th class="num">Return rate</th><th class="num">Open tickets</th><th>Churn risk</th><th>Upsell</th><th>Next best action</th></tr></thead><tbody>` +
+  $("#accounts").innerHTML = `<thead><tr><th>Customer</th><th>Channel</th><th class="num">Net sales TTM</th><th>12-mo trend</th><th>Product lines</th><th class="num">Return rate</th><th class="num">Open tickets</th><th>Churn risk</th><th>Upsell</th><th>Next best action</th></tr></thead><tbody>` +
     sorted.map(c => `<tr class="clickable" tabindex="0" data-id="${c.id}">
       <td><div class="acct-name">${esc(c.name)}</div><div class="acct-meta">${esc(c.region)} · ${esc(c.owner)}</div></td>
       <td><span class="chip dot" style="--c:${chColor(c.channel)}">${c.channel === "DTC" ? "Direct" : "Wholesale"}</span></td>
       <td class="num">${fmt$(c.sales)} <div class="acct-meta ${c.yoy >= 0 ? "up-good" : "up-bad"}">${c.yoy >= 0 ? "▲" : "▼"} ${fmtPct(Math.abs(c.yoy), 0)}</div></td>
       <td>${sparkline(c.monthly.slice(12))}</td>
-      <td><span class="dots" title="${c.breadth} of 9 collections">${COLLECTIONS.map((_, k) => `<i class="${c.owned[k] ? "on" : ""}"></i>`).join("")}</span> <span class="acct-meta">${c.breadth}/9</span></td>
+      <td><span class="dots" title="${c.breadth} of 9 product lines">${COLLECTIONS.map((_, k) => `<i class="${c.owned[k] ? "on" : ""}"></i>`).join("")}</span> <span class="acct-meta">${c.breadth}/9</span></td>
       <td class="num">${fmtPct(c.returnRate)}</td>
       <td class="num">${c.openTickets}${c.highTickets ? ` <span class="acct-meta up-bad">(${c.highTickets} high)</span>` : ""}</td>
       <td>${statusHTML(c.churn)}</td>
@@ -583,7 +583,7 @@ function renderCustomer() {
   const ltv = c.sales * (2026 - c.since) * (0.55 + r() * 0.3);
   $("#profile").innerHTML = `
     <div><div class="label">${c.channel === "DTC" ? "Direct client (B2C)" : "Wholesale account (B2B)"}</div><h2>${esc(c.name)}</h2>
-      <div class="acct-meta">${esc(c.region)} · Owner: ${esc(c.owner)} · Customer since ${c.since}${c.doors ? " · " + c.doors + " door" + (c.doors > 1 ? "s" : "") : ""}</div></div>
+      <div class="acct-meta">${esc(c.region)} · Owner: ${esc(c.owner)} · Customer since ${c.since}${c.doors ? " · " + c.doors + " location" + (c.doors > 1 ? "s" : "") : ""}</div></div>
     <div><div class="label">Net sales · TTM</div><div class="big">${fmt$(c.sales)}</div><div class="acct-meta ${c.yoy >= 0 ? "up-good" : "up-bad"}">${c.yoy >= 0 ? "▲" : "▼"} ${fmtPct(Math.abs(c.yoy))} vs. prior year · LTV ${fmt$(ltv)}</div></div>
     <div><div class="label">Churn risk</div><div class="big">${c.churn}</div>${statusHTML(c.churn)}</div>
     <div><div class="label">Upsell score</div><div class="big">${c.upsell}</div><div class="acct-meta">${fmt$(c.upsellValue)} est. annual opportunity</div></div>
@@ -605,7 +605,7 @@ function renderCustomer() {
   else if (c.openTickets) drivers.push(["med", "–", `${c.openTickets} open Zendesk ticket${c.openTickets > 1 ? "s" : ""}`, "+" + c.openTickets * 2]);
   if (c.daysSinceEngaged > 60) drivers.push(["med", "–", `No marketing engagement in ${c.daysSinceEngaged} days`, "+" + Math.round(c.daysSinceEngaged * 0.12)]);
   else drivers.push(["low", "✓", `Engaged with marketing ${c.daysSinceEngaged} days ago`, "±0"]);
-  if (c.breadth <= 2) drivers.push(["med", "–", `Concentrated in ${c.breadth} collection${c.breadth > 1 ? "s" : ""} — low stickiness`, "+" + (5 - c.breadth) * 2]);
+  if (c.breadth <= 2) drivers.push(["med", "–", `Concentrated in ${c.breadth} product line${c.breadth > 1 ? "s" : ""} — low stickiness`, "+" + (5 - c.breadth) * 2]);
   $("#c-drivers").innerHTML = drivers.map(([k, i, t, v]) => `<li><span class="status ${k}"><span class="ico" aria-hidden="true">${i}</span></span><span>${esc(t)}</span><span class="impact">${v} pts</span></li>`).join("") + `<li style="grid-template-columns:1fr"><span class="note" style="margin:0">Illustrative scoring. Real model would be trained in a Fabric notebook and explain drivers per customer.</span></li>`;
 
   // mix
@@ -617,12 +617,12 @@ function renderCustomer() {
 
   // recs
   const gaps = COLLECTIONS.map((n, k) => ({ n, pop: COLL_POP[k], owned: c.owned[k] })).filter(g => !g.owned).sort((a, b) => b.pop - a.pop).slice(0, 3);
-  const recs = gaps.map((g, i) => ({ t: (c.channel === "Wholesale" ? "Add " + g.n + " to assortment" : "Introduce " + g.n), d: `${fmtPct(Math.min(0.95, g.pop + 0.08), 0)} of similar ${c.channel === "Wholesale" ? "retailers" : "clients"} buy it alongside ${esc(COLLECTIONS[0])}.`, v: Math.round(c.upsellValue * [0.5, 0.3, 0.2][i] / 100) * 100 }));
-  if (c.channel === "Wholesale" && c.doors && c.doors < 4) recs.push({ t: "Expand to additional doors", d: "Top-quartile sell-through across current doors supports expansion.", v: Math.round(c.sales * 0.12 / 100) * 100 });
-  $("#c-recs").innerHTML = recs.length ? recs.map(x => `<div class="rec"><div class="t">${esc(x.t)}</div><div class="d">${x.d}</div><div class="v">Est. ${fmt$(x.v)} / year</div></div>`).join("") : `<div class="note">Buys all collections — focus on retention and new launches.</div>`;
+  const recs = gaps.map((g, i) => ({ t: (c.channel === "Wholesale" ? "Add " + g.n + " to planogram" : "Introduce " + g.n), d: `${fmtPct(Math.min(0.95, g.pop + 0.08), 0)} of similar ${c.channel === "Wholesale" ? "retailers" : "clients"} buy it alongside ${esc(COLLECTIONS[0])}.`, v: Math.round(c.upsellValue * [0.5, 0.3, 0.2][i] / 100) * 100 }));
+  if (c.channel === "Wholesale" && c.doors && c.doors < 4) recs.push({ t: "Expand to additional locations", d: "Top-quartile sell-through across current locations supports expansion.", v: Math.round(c.sales * 0.12 / 100) * 100 });
+  $("#c-recs").innerHTML = recs.length ? recs.map(x => `<div class="rec"><div class="t">${esc(x.t)}</div><div class="d">${x.d}</div><div class="v">Est. ${fmt$(x.v)} / year</div></div>`).join("") : `<div class="note">Buys every product line — focus on retention and new launches.</div>`;
 
   // returns
-  const reasons = [["Sizing / fit", 0.34], ["Changed mind", 0.22], ["Quality / defect", 0.14 + (c.highTickets ? 0.1 : 0)], ["Damaged in transit", 0.09], ["Other", 0.12]];
+  const reasons = [["Wrong size / spec", 0.30], ["No longer needed", 0.20], ["Defective", 0.16 + (c.highTickets ? 0.1 : 0)], ["Damaged in transit", 0.09], ["Other", 0.12]];
   const rs = reasons.reduce((s, x) => s + x[1], 0);
   $("#c-returns").innerHTML = `<div class="mini-stats" style="grid-template-columns:1fr 1fr"><div><div class="label">Return rate</div><div class="v ${c.returnRate > 0.08 ? "up-bad" : ""}">${fmtPct(c.returnRate)}</div></div><div><div class="label">Returned $</div><div class="v">${fmt$(c.sales * c.returnRate)}</div></div></div>
     <div class="label" style="font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:8px">Top reasons</div>
@@ -633,11 +633,11 @@ function renderCustomer() {
   const engaged = touches.map((t, i) => i >= 12 - Math.floor(c.daysSinceEngaged / 30) ? 0 : Math.round(t * (0.2 + r() * 0.5)));
   const openRate = engaged.reduce((a, b) => a + b, 0) / touches.reduce((a, b) => a + b, 0);
   $("#c-mkt-stats").innerHTML = `<div><div class="label">Touches</div><div class="v">${touches.reduce((a, b) => a + b, 0)}</div></div><div><div class="label">Engagement</div><div class="v">${fmtPct(openRate, 0)}</div></div><div><div class="label">Last engaged</div><div class="v">${c.daysSinceEngaged}d ago</div></div>`;
-  columnChart($("#c-mkt"), { labels: labs, values: engaged, name: "Engaged touches", color: "var(--series-3)", height: 170, tipExtra: i => [["Total touches", touches[i]], ["Channels", c.channel === "Wholesale" ? "Email · Co-op · Trunk show" : "Email · SMS · Events"]] });
+  columnChart($("#c-mkt"), { labels: labs, values: engaged, name: "Engaged touches", color: "var(--series-3)", height: 170, tipExtra: i => [["Total touches", touches[i]], ["Channels", c.channel === "Wholesale" ? "Email · Co-op · Trade show" : "Email · SMS"]] });
   $("#c-mkt-table").innerHTML = tableHTML(["Month", "Touches", "Engaged"], labs.map((l, i) => [l, touches[i], engaged[i]]), [1, 2]);
 
   // zendesk
-  const subjects = ["Order shipment delayed", "Clasp repair request", "Invoice discrepancy", "Co-op marketing funds", "Resize request", "Missing items in shipment", "Warranty claim", "Display fixture request"];
+  const subjects = ["Order shipment delayed", "Smart Widget won't connect", "Invoice discrepancy", "Bulk pricing request", "Missing parts in box", "Short shipment", "Warranty claim", "EDI order error"];
   const zd = Array.from({ length: Math.max(3, c.openTickets + 3) }, (_, i) => { const open = i < c.openTickets; const pr = open && i < c.highTickets ? "High" : pick(["Normal", "Normal", "Low"], r); return { id: 48210 + c.id * 13 + i * 7, s: pick(subjects, r), pr, status: open ? pick(["Open", "Pending"], r) : "Solved", age: open ? 2 + Math.floor(r() * 20) : 20 + Math.floor(r() * 200) }; });
   const solved = zd.filter(t => t.status === "Solved").length;
   $("#c-zd-stats").innerHTML = `<div><div class="label">Open</div><div class="v ${c.highTickets ? "up-bad" : ""}">${c.openTickets}</div></div><div><div class="label">Avg. resolution</div><div class="v">${(1.5 + r() * 4).toFixed(1)} days</div></div><div><div class="label">CSAT</div><div class="v">${Math.round(78 + r() * 20 - c.highTickets * 6)}%</div></div>`;
@@ -648,7 +648,7 @@ function renderCustomer() {
   const events = [];
   for (let i = 0; i < 4; i++) events.push({ d: 3 + c.daysSinceOrder + i * (20 + Math.floor(r() * 30)), src: "Order", t: `Order #SO-${71200 + c.id * 3 + i}`, m: `${fmt$(c.sales / (6 + r() * 8))} · ${pick(COLLECTIONS.filter((_, k) => c.owned[k]), r)}` });
   for (let i = 0; i < 2; i++) events.push({ d: 10 + Math.floor(r() * 120), src: "Return", t: "Return authorized", m: `${pick(reasons, r)[0]} · ${fmt$(c.sales * c.returnRate / (3 + r() * 4))}` });
-  for (let i = 0; i < 3; i++) events.push({ d: c.daysSinceEngaged + i * 25, src: "Marketing", t: pick(c.channel === "Wholesale" ? ["Opened: Holiday sell-in email", "Attended: Spring trunk show", "Co-op ad placed"] : ["Opened: New Arrivals email", "Clicked: Caviar Icon launch", "RSVP: In-store event"], r), m: "Campaign engagement" });
+  for (let i = 0; i < 3; i++) events.push({ d: c.daysSinceEngaged + i * 25, src: "Marketing", t: pick(c.channel === "Wholesale" ? ["Opened: Q4 stocking program", "Attended: Spring trade show", "Co-op ad placed"] : ["Opened: New Arrivals email", "Clicked: Widget 2.0 launch", "Clicked: Black Friday tool deals"], r), m: "Campaign engagement" });
   zd.slice(0, 3).forEach(t => events.push({ d: t.age, src: "Zendesk", t: `Ticket #${t.id} · ${t.s}`, m: `${t.pr} priority · ${t.status}` }));
   events.sort((a, b) => a.d - b.d);
   const today = new Date(2026, 8, 29);

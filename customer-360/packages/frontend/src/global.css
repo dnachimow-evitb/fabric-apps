@@ -1,0 +1,209 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+/* Bridged tokens — kept in `@theme static` so the CSS vars are always
+   emitted, not tree-shaken when no Tailwind utility consumes them.
+   Required because <VegaVisual> and <DataGrid> read these at runtime via
+   `useCssTheme()` and project them into a JS theme object (Vega's SVG output
+   cannot resolve `var()` references). */
+@theme static {
+  --color-brand: #1c6fb8; /* bar/area fills (steel blue, chart slot 1) */
+  --color-brand-foreground: #1c6fb8; /* line/point marks, branded text & emphasis */
+  --color-hover: #f1efeb; /* row/cell hover surface in DataGrid + visuals */
+  /* Chart series (validated blue/orange pair, all-pairs CVD-safe in light and dark) */
+  --color-series-1: #1c6fb8; /* Wholesale / this year */
+  --color-series-2: #d9480f; /* Direct / last year */
+  /* Status (risk) colours: always paired with an icon + label */
+  --color-status-good: #2b8a3e;
+  --color-status-warning: #e8a317;
+  --color-status-critical: #c92a2a;
+  --color-header: #1d2025; /* app bar: charcoal in both themes */
+  --color-header-foreground: #f4f3f0;
+}
+
+@theme {
+  /* Color tokens — light theme
+     Usage: bg-*, text-*, border-* (e.g. bg-primary text-primary-foreground)
+     Each token has a -foreground pair for text on that surface. */
+  --color-background: #f4f3f0; /* page background: warm concrete */
+  --color-foreground: #1d2025; /* default text: charcoal */
+
+  --color-card: #ffffff; /* card surfaces */
+  --color-card-foreground: #1d2025;
+
+  --color-popover: #ffffff; /* popover/dropdown surfaces */
+  --color-popover-foreground: #1d2025;
+
+  --color-primary: #c2410c; /* primary actions: safety orange (AA on white) */
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #ebe9e4; /* secondary actions */
+  --color-secondary-foreground: #1d2025;
+
+  --color-muted: #eceae5; /* subtle backgrounds */
+  --color-muted-foreground: #5b6067; /* subdued text */
+
+  --color-accent: #f1efeb; /* accent highlights */
+  --color-accent-foreground: #1d2025;
+
+  --color-destructive: #c92a2a; /* errors & destructive actions */
+  --color-destructive-foreground: #ffffff;
+
+  --color-border: #dcd9d3; /* default border */
+  --color-input: #cfccc5; /* input field borders */
+  --color-ring: #c2410c; /* focus rings */
+
+  --radius-none: 0;
+  --radius-sm: 1px;
+  --radius-md: 2px;
+  --radius-lg: 3px;
+  --radius-xl: 4px;
+  --radius-2xl: 6px;
+  --radius-3xl: 16px;
+  --radius-4xl: 24px;
+  --radius-5xl: 32px;
+  --radius-6xl: 40px;
+  --radius-full: 9999px;
+  --radius: 3px;
+
+  /* Spacing — 4px grid; use only these tokens, no interpolation. *-nudge = base − 2px.
+     Usage: p-*, m-*, gap-* (e.g. p-400 gap-300) */
+  --spacing-none: 0;
+  --spacing-100-nudge: 2px;
+  --spacing-100: 4px;
+  --spacing-200-nudge: 6px;
+  --spacing-200: 8px;
+  --spacing-300-nudge: 10px;
+  --spacing-300: 12px;
+  --spacing-400: 16px;
+  --spacing-500: 20px;
+  --spacing-600: 24px;
+  --spacing-700: 28px;
+  --spacing-800: 32px;
+
+  /* Font Sizes — 100-based scale 
+     Usage: text-* (e.g. text-300, text-hero-900) */
+  --text-100: 10px;
+  --text-200: 12px;
+  --text-300: 14px;
+  --text-400: 16px;
+  --text-500: 20px;
+  --text-600: 24px;
+  --text-hero-700: 28px;
+  --text-hero-800: 32px;
+  --text-hero-900: 40px;
+  --text-hero-1000: 68px;
+
+  /* Line Heights — paired with font sizes
+     Usage: leading-* (e.g. leading-300) */
+  --leading-100: 14px;
+  --leading-200: 16px;
+  --leading-300: 20px;
+  --leading-400: 22px;
+  --leading-500: 28px;
+  --leading-600: 32px;
+  --leading-hero-700: 36px;
+  --leading-hero-800: 40px;
+  --leading-hero-900: 52px;
+  --leading-hero-1000: 92px;
+
+  /* Font Weights
+     Usage: font-* (e.g. font-semibold) */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Font Families
+     Usage: font-* (e.g. font-heading, font-base) */
+  --font-heading:
+    'Barlow Condensed', 'Barlow', 'Segoe UI', sans-serif; /* headings, labels, display text */
+  --font-base: 'Barlow', 'Segoe UI', sans-serif; /* body text, labels, UI controls */
+  --font-monospace: 'JetBrains Mono', Consolas, monospace; /* IDs, codes */
+  --font-numeric:
+    'Barlow Semi Condensed', 'Barlow', 'Segoe UI', sans-serif; /* KPI values, numeric displays */
+
+  /* Icon Sizes — 100-based scale
+     Usage: icon-size-* custom utility (e.g. icon-size-200) */
+  --icon-size-100: 12px;
+  --icon-size-200: 16px;
+  --icon-size-300: 20px;
+  --icon-size-400: 24px;
+  --icon-size-500: 28px;
+  --icon-size-600: 32px;
+  --icon-size-700: 48px;
+}
+
+@utility icon-size-* {
+  width: --value(--icon-size-*);
+  height: --value(--icon-size-*);
+}
+
+@layer base {
+  .dark {
+    /* Color tokens — dark theme: machined steel */
+    --color-background: #141619;
+    --color-foreground: #eef0f2;
+
+    --color-card: #1d2025;
+    --color-card-foreground: #eef0f2;
+
+    --color-popover: #1d2025;
+    --color-popover-foreground: #eef0f2;
+
+    --color-primary: #e8590c;
+    --color-primary-foreground: #141619;
+
+    --color-secondary: #25282d;
+    --color-secondary-foreground: #eef0f2;
+
+    --color-muted: #25282d;
+    --color-muted-foreground: #a3a8ae;
+
+    --color-accent: #2a2e34;
+    --color-accent-foreground: #eef0f2;
+
+    --color-destructive: #f03e3e;
+    --color-destructive-foreground: #141619;
+
+    --color-border: #33373d;
+    --color-input: #41464d;
+    --color-ring: #e8590c;
+
+    --color-brand: #3d8bd4;
+    --color-brand-foreground: #3d8bd4;
+    --color-hover: #2a2e34;
+    --color-series-1: #3d8bd4;
+    --color-series-2: #e8590c;
+    --color-status-good: #51cf66;
+    --color-status-warning: #fcc419;
+    --color-status-critical: #ff6b6b;
+    --color-header: #0c0d0f;
+    --color-header-foreground: #eef0f2;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-base);
+  }
+
+  select,
+  input,
+  textarea,
+  button {
+    font-family: inherit;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}

@@ -1,0 +1,13 @@
+{
+  "tenant": "dsdemo.net",
+  "workspace_name": "Customer 360 (Dev)",
+  "workspace_id": "a8971f73-fcb7-4423-8b60-6ebdaa13fe59",
+  "lakehouse_name": "c360_lakehouse",
+  "lakehouse_id": "ac28df18-23db-4639-b3a1-de7e689cb0a8",
+  "notebooks": {
+    "c360_customer_dimension": "notebooks/c360_customer_dimension.py",
+    "c360_customer_metrics": "notebooks/c360_customer_metrics.py",
+    "c360_summary_export": "notebooks/c360_summary_export.py",
+    "c360_runner": "notebooks/c360_runner.py"
+  }
+}
