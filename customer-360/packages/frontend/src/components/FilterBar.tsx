@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { CalendarRange, SlidersHorizontal, X } from 'lucide-react';
+import { CalendarRange, ChevronDown, SlidersHorizontal, X } from 'lucide-react';
 
 import {
-  ALL_FILTERS, DATE_PRESETS, FIRST_MONTH, LAST_MONTH, LIFECYCLE_STAGES, RISK_BANDS, presetRange, rangeLabel,
+  ALL_FILTERS, DATE_PRESETS, FIRST_MONTH, LAST_MONTH, LIFECYCLE_STAGES, RISK_BANDS, cityLabel, presetRange, rangeLabel,
   type DatePreset, type Filters,
 } from '@/lib/c360';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,35 @@ function Select({ label, value, onChange, options, className }: {
 
 const opt = (all: string, xs: readonly string[]): [string, string][] => [['all', all], ...xs.map((x) => [x, x] as [string, string])];
 
+/** Multi-select dropdown (checkbox list in a popover). */
+function MultiSelect({ label, all, values, options, onChange }: {
+  label: string; all: string; values: string[]; options: string[]; onChange: (v: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const summary = values.length === 0 ? all : values.length <= 2 ? values.join(', ') : `${values.length} selected`;
+  const toggle = (v: string) => onChange(values.includes(v) ? values.filter((x) => x !== v) : [...values, v]);
+  return (
+    <div className="relative flex flex-col gap-100">
+      <span className="font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="listbox"
+        className={cn(FIELD, 'inline-flex min-w-[calc(var(--spacing-800)*4.5)] items-center justify-between gap-200 text-left')}>
+        <span className="truncate">{summary}</span><ChevronDown aria-hidden className="icon-size-200 shrink-0" />
+      </button>
+      {open && (
+        <div role="listbox" aria-multiselectable aria-label={label} onMouseLeave={() => setOpen(false)}
+          className="absolute top-full z-30 mt-100 max-h-[calc(var(--spacing-800)*9)] min-w-full overflow-y-auto rounded-md border border-border bg-popover p-200 text-popover-foreground shadow-lg">
+          <button type="button" onClick={() => onChange([])} className="mb-100 w-full rounded-sm px-200 py-100 text-left text-200 hover:bg-accent">{all}</button>
+          {options.map((o) => (
+            <label key={o} className="flex cursor-pointer items-center gap-200 rounded-sm px-200 py-100 text-300 hover:bg-accent">
+              <input type="checkbox" checked={values.includes(o)} onChange={() => toggle(o)} className="accent-[color:var(--color-primary)]" />{o}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function FilterBar({ filters, onChange, options, showDate = true }: {
   filters: Filters; onChange: (f: Filters) => void; options: FilterOptions; showDate?: boolean;
 }) {
@@ -37,7 +66,11 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
   const active: [string, () => void][] = [];
   if (filters.customerType !== 'all') active.push([filters.customerType, () => set({ customerType: 'all' })]);
   if (filters.region !== 'all') active.push([filters.region, () => set({ region: 'all' })]);
-  if (filters.state !== 'all') active.push([filters.state, () => set({ state: 'all' })]);
+  for (const st of filters.states) active.push([st, () => set({ states: filters.states.filter((x) => x !== st) })]);
+  if (filters.cities.length) {
+    const label = filters.cities.length <= 2 ? filters.cities.map(cityLabel).join(' + ') : `${filters.cities.length} cities (map)`;
+    active.push([label, () => set({ cities: [] })]);
+  }
   if (filters.owner !== 'all') active.push([filters.owner, () => set({ owner: 'all' })]);
   if (filters.riskBand !== 'all') active.push([`${filters.riskBand} risk`, () => set({ riskBand: 'all' })]);
   if (filters.lifecycle !== 'all') active.push([filters.lifecycle, () => set({ lifecycle: 'all' })]);
@@ -71,7 +104,7 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
         <Select label="Customer type" value={filters.customerType} onChange={(v) => set({ customerType: v as Filters['customerType'] })}
           options={[['all', 'All customers'], ['Wholesale', 'Wholesale (B2B)'], ['Direct', 'Direct (B2C)']]} />
         <Select label="Region" value={filters.region} onChange={(v) => set({ region: v })} options={opt('All regions', options.regions)} />
-        <Select label="State" value={filters.state} onChange={(v) => set({ state: v })} options={opt('All states', options.states)} />
+        <MultiSelect label="State" all="All states" values={filters.states} options={options.states} onChange={(states) => set({ states })} />
         <Select label="Account owner" value={filters.owner} onChange={(v) => set({ owner: v })} options={opt('All owners', options.owners)} />
         <button type="button" onClick={() => setMore(!more)} aria-expanded={more}
           className={cn('inline-flex items-center gap-100 self-end rounded-md border px-300 py-200 text-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',

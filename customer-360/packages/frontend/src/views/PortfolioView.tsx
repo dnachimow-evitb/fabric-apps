@@ -7,7 +7,7 @@ import { Card, Empty, Kpi, Loaded, Meter, RiskBadge, Skeleton } from '@/componen
 import { useQuery } from '@/hooks/use-query';
 import { TYPE_DOMAIN, useChartColors } from '@/lib/chart-colors';
 import {
-  fetchMonthlyTrend, fetchPenetration, fetchRangeByCity, fetchRangeTotals, previousRange, rangeLabel,
+  fetchMapSnapshot, fetchMonthlyTrend, fetchPenetration, fetchRangeByCity, fetchRangeTotals, previousRange, rangeLabel,
   type Filters, type MetricRow, type PenetrationRow, type RangeTotals, type TrendRow,
 } from '@/lib/c360';
 import { count, money, pct, signedPct } from '@/lib/format';
@@ -25,7 +25,11 @@ export function PortfolioView({ filters, metrics, onOpenCustomer, onFilters }: {
   const trend = useQuery(`trend:${fkey}`, () => fetchMonthlyTrend(filters));
   const totals = useQuery(`totals:${fkey}`, () => fetchRangeTotals(filters, filters.range));
   const prevTotals = useQuery(`prev:${fkey}`, () => (prev ? fetchRangeTotals(filters, prev) : Promise.resolve(null)));
-  const cities = useQuery(`cities:${fkey}`, () => fetchRangeByCity(filters, filters.range));
+  // The map ignores its own city selection so every city stays drawn (selected ones are highlighted).
+  const mapFilters: Filters = { ...filters, cities: [] };
+  const mkey = JSON.stringify(mapFilters);
+  const cities = useQuery(`cities:${mkey}`, () => fetchRangeByCity(mapFilters, mapFilters.range));
+  const snapshot = useQuery(`snapshot:${mkey}`, () => fetchMapSnapshot(mapFilters));
   const penetration = useQuery('penetration', fetchPenetration);
   const [line, setLine] = useState<string | null>(null);
   const [sku, setSku] = useState<string | null>(null);
@@ -37,10 +41,11 @@ export function PortfolioView({ filters, metrics, onOpenCustomer, onFilters }: {
         {(rows) => <KpiStrip rows={rows} totals={totals.data} prev={prevTotals.data ?? null} filters={filters} />}
       </Loaded>
 
-      <Card title="Customer map" subtitle="Customers by city. Pick the metric; bubble size and colour show it.">
+      <Card title="Customer map" subtitle="Customers by city. Pick the metric; bubble size and colour show it. Select cities to filter the whole page.">
         <Loaded q={cities} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*13)]" />}>
-          {(rows) => (metrics.data
-            ? <CustomerMap metrics={metrics.data} cities={rows} filters={filters} onState={(state) => onFilters({ ...filters, state })} />
+          {(rows) => (snapshot.data
+            ? <CustomerMap snapshot={snapshot.data} cities={rows} filters={filters} selected={filters.cities}
+                onSelect={(keys) => onFilters({ ...filters, cities: keys })} />
             : <Skeleton className="h-[calc(var(--spacing-800)*13)]" />)}
         </Loaded>
       </Card>

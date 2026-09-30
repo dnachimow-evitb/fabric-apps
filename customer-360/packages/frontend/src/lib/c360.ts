@@ -80,7 +80,10 @@ export const LIFECYCLE_STAGES = ['New', 'Active', 'At Risk', 'Lapsed'] as const;
 export interface Filters {
   customerType: CustomerType | 'all';
   region: string | 'all';
-  state: string | 'all';
+  /** Multi-select; empty = all states. */
+  states: string[];
+  /** Cities picked on the map, as "City|ST" keys; empty = all cities. */
+  cities: string[];
   owner: string | 'all';
   riskBand: string | 'all';
   lifecycle: string | 'all';
@@ -90,7 +93,7 @@ export interface Filters {
 }
 
 export const ALL_FILTERS: Filters = {
-  customerType: 'all', region: 'all', state: 'all', owner: 'all', riskBand: 'all', lifecycle: 'all', productLine: 'all',
+  customerType: 'all', region: 'all', states: [], cities: [], owner: 'all', riskBand: 'all', lifecycle: 'all', productLine: 'all',
   proOnly: false, range: presetRange('last12'),
 };
 
@@ -111,12 +114,13 @@ type Eq<T = string> = { eq: T };
 /** Connector `where` clause for the customer-attribute slicers (same column names on metrics and monthly). */
 function filterWhere(f: Filters) {
   const w: {
-    customerType?: Eq; region?: Eq; state?: Eq; accountManager?: Eq; churnRiskBand?: Eq; lifecycleStage?: Eq;
+    customerType?: Eq; region?: Eq; state?: { in: string[] }; city?: { in: string[] }; accountManager?: Eq; churnRiskBand?: Eq; lifecycleStage?: Eq;
     productLinesBought?: { contains: string }; isProMember?: Eq<boolean>;
   } = {};
   if (f.customerType !== 'all') w.customerType = { eq: f.customerType };
   if (f.region !== 'all') w.region = { eq: f.region };
-  if (f.state !== 'all') w.state = { eq: f.state };
+  if (f.states.length) w.state = { in: f.states };
+  if (f.cities.length) w.city = { in: [...new Set(f.cities.map(cityName))] };
   if (f.owner !== 'all') w.accountManager = { eq: f.owner };
   if (f.riskBand !== 'all') w.churnRiskBand = { eq: f.riskBand };
   if (f.lifecycle !== 'all') w.lifecycleStage = { eq: f.lifecycle };
@@ -124,6 +128,10 @@ function filterWhere(f: Filters) {
   if (f.proOnly) w.isProMember = { eq: true };
   return w;
 }
+
+export const cityKey = (city: string, state: string) => `${city}|${state}`;
+export const cityName = (key: string) => key.split('|')[0];
+export const cityLabel = (key: string) => key.split('|').join(', ');
 
 /** Type / region / owner only: for tables that do not carry the other slicer columns (SKU buyers, cascades). */
 function basicWhere(f: Filters) {
@@ -186,6 +194,30 @@ export async function fetchRangeByCity(f: Filters, range: { from: string; to: st
   return rows.map((r) => ({ city: r.fields.city ?? '', state: r.fields.state ?? '', ...totals(r.aggregations) }));
 }
 export type CityTotals = Awaited<ReturnType<typeof fetchRangeByCity>>[number];
+
+/** Current-snapshot figures by city for the map (server-side aggregates on the customer metrics table). */
+export async function fetchMapSnapshot(f: Filters) {
+  const l = await lake();
+  const where = filterWhere(f);
+  const [all, high] = await Promise.all([
+    l.GoldCustomerMetrics.where(where).groupBy(['city', 'state', 'latitude', 'longitude']).aggregate({
+      customers: { count: 'churnRiskScore' }, risk: { sum: 'revenueAtRisk' }, churn: { avg: 'churnRiskScore' }, upsell: { sum: 'upsellValueEst' },
+    }).execute(),
+    l.GoldCustomerMetrics.where({ ...where, churnRiskBand: { eq: 'High' } }).groupBy(['city', 'state']).aggregate({
+      highRisk: { count: 'churnRiskScore' },
+    }).execute(),
+  ]);
+  const highBy = new Map(high.map((r) => [cityKey(r.fields.city ?? '', r.fields.state ?? ''), r.aggregations.highRisk ?? 0]));
+  return all.filter((r) => r.fields.city && r.fields.latitude != null && r.fields.longitude != null).map((r) => {
+    const key = cityKey(r.fields.city ?? '', r.fields.state ?? '');
+    return {
+      key, city: r.fields.city ?? '', state: r.fields.state ?? '', lat: Number(r.fields.latitude), lon: Number(r.fields.longitude),
+      customers: r.aggregations.customers ?? 0, risk: r.aggregations.risk ?? 0, churn: r.aggregations.churn ?? 0,
+      upsell: r.aggregations.upsell ?? 0, highRisk: highBy.get(key) ?? 0,
+    };
+  });
+}
+export type CitySnapshot = Awaited<ReturnType<typeof fetchMapSnapshot>>[number];
 
 /** Portfolio trend: monthly totals for the selected range, aggregated server-side under the slicers. */
 export async function fetchMonthlyTrend(f: Filters) {
