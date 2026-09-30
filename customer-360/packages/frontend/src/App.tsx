@@ -10,12 +10,13 @@ import { Combobox, type ComboOption } from '@/components/Combobox';
 import { cn } from '@/lib/utils';
 import { CustomerView } from '@/views/CustomerView';
 import { PortfolioView } from '@/views/PortfolioView';
+import { PlaybookView } from '@/views/PlaybookView';
 import { RiskView } from '@/views/RiskView';
 import { IdentityView } from '@/views/IdentityView';
 
-type View = 'portfolio' | 'risk' | 'customer' | 'identity';
+type View = 'portfolio' | 'playbook' | 'risk' | 'customer' | 'identity';
 
-const VIEW_LABEL: Record<View, string> = { portfolio: 'Portfolio', risk: 'Risk', customer: 'Customer 360', identity: 'Identity' };
+const VIEW_LABEL: Record<View, string> = { portfolio: 'Portfolio', playbook: 'Playbook', risk: 'Risk', customer: 'Customer 360', identity: 'Identity' };
 
 function App() {
   const { isDark, toggleTheme } = useTheme();
@@ -45,7 +46,7 @@ function App() {
             <h1 className="font-heading text-300 uppercase tracking-wider opacity-70">Customer 360</h1>
           </div>
           <nav className="flex items-center gap-100" aria-label="Views">
-            {(['portfolio', 'risk', 'customer', 'identity'] as const).map((v) => (
+            {(['portfolio', 'playbook', 'risk', 'customer', 'identity'] as const).map((v) => (
               <button key={v} type="button" onClick={() => setView(v)} aria-current={view === v ? 'page' : undefined}
                 className={cn('rounded-md px-300 py-100 font-heading text-300 font-semibold uppercase tracking-wider transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   view === v ? 'bg-primary text-primary-foreground' : 'opacity-80 hover:opacity-100')}>
@@ -61,7 +62,7 @@ function App() {
       </header>
 
       <main className="mx-auto flex max-w-[calc(var(--spacing-800)*44)] flex-col gap-400 px-600 py-500">
-        {view === 'portfolio' || view === 'risk' ? (
+        {view === 'portfolio' || view === 'playbook' || view === 'risk' ? (
           <FilterBar filters={filters} onChange={changeFilters} options={options} showDate={view === 'portfolio'} />
         ) : view === 'customer' ? (
           <div className="flex flex-wrap items-end gap-300">
@@ -75,6 +76,8 @@ function App() {
 
         {view === 'portfolio'
           ? <PortfolioView filters={filters} metrics={metrics} onOpenCustomer={openCustomer} onFilters={changeFilters} />
+          : view === 'playbook'
+          ? <PlaybookView metrics={metrics} onOpenCustomer={openCustomer} />
           : view === 'risk'
           ? <RiskView filters={filters} onOpenCustomer={openCustomer} />
           : view === 'identity'

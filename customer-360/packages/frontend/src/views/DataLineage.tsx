@@ -25,7 +25,7 @@ function Code({ children }: { children: ReactNode }) {
 }
 
 function Formula({ children }: { children: ReactNode }) {
-  return <pre className="whitespace-pre-wrap break-words font-mono text-200 leading-relaxed text-foreground">{children}</pre>;
+  return <pre className="whitespace-pre-wrap break-words font-mono text-200 leading-300 text-foreground">{children}</pre>;
 }
 
 export function DataLineage({ filters, tab, onTab, visual, onVisual }: {
