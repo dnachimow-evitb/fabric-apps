@@ -46,7 +46,7 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
   const extraCount = [filters.riskBand, filters.lifecycle, filters.productLine].filter((v) => v !== 'all').length + (filters.proOnly ? 1 : 0);
 
   return (
-    <div className="flex flex-col gap-300 rounded-lg border border-border bg-card p-400" role="group" aria-label="Filters">
+    <div className="sticky top-0 z-20 flex flex-col gap-300 rounded-lg border border-border bg-card p-400 shadow-sm" role="group" aria-label="Filters">
       <div className="flex flex-wrap items-end gap-300">
         {showDate && (
           <>

@@ -3,6 +3,7 @@ import { VegaVisual, useCssTheme } from '@microsoft/fabric-visuals';
 import type { VisualizationSpec } from '@microsoft/fabric-visuals';
 import type { InteractionEvent } from '@microsoft/fabric-visuals-core';
 import usStates from 'us-atlas/states-10m.json';
+import { X } from 'lucide-react';
 
 import { Empty } from '@/components/ui';
 import { useChartColors } from '@/lib/chart-colors';
@@ -35,8 +36,10 @@ const METRICS: { key: MetricKey; label: string; range: boolean; fmt: (v: number)
 ];
 
 export function CustomerMap({ metrics, cities, filters, onState }: {
-  metrics: MetricRow[]; cities: CityTotals[]; filters: Filters; onState: (state: string) => void;
+  metrics: MetricRow[]; cities: CityTotals[]; filters: Filters; onState: (state: string | 'all') => void;
 }) {
+  // Clicking the state that is already selected (or empty map space) clears the filter.
+  const toggleState = (state: string) => onState(filters.state === state ? 'all' : state);
   const theme = useCssTheme();
   const c = useChartColors();
   const [metric, setMetric] = useState<MetricKey>('sales');
@@ -95,9 +98,12 @@ export function CustomerMap({ metrics, cities, filters, onState }: {
 
   const onInteraction = (events: InteractionEvent[]) => {
     for (const e of events) {
-      if (e.action !== 'select') continue;
+      if (e.action === 'clear') {
+        if (filters.state !== 'all') onState('all');
+        continue;
+      }
       const p = e.selections[0]?.predicates.find((x) => x.name === 'state');
-      if (p?.type === 'set' && typeof p.values[0] === 'string') onState(p.values[0]);
+      if (p?.type === 'set' && typeof p.values[0] === 'string') toggleState(p.values[0]);
     }
   };
 
@@ -115,14 +121,22 @@ export function CustomerMap({ metrics, cities, filters, onState }: {
             {METRICS.filter((x) => !x.range).map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}
           </optgroup>
         </select>
-        <span className="text-200 text-muted-foreground">{m.range ? rangeLabel(filters.range) : 'as of 28 Sep 2026'} · click a city to filter by its state</span>
+        <span className="text-200 text-muted-foreground">
+          {m.range ? rangeLabel(filters.range) : 'as of 28 Sep 2026'} · click a city to filter by its state, click it again to clear
+        </span>
+        {filters.state !== 'all' && (
+          <button type="button" onClick={() => onState('all')} aria-label={`Clear the ${filters.state} filter`}
+            className="ml-auto inline-flex items-center gap-100 rounded-full bg-primary px-300 py-100 text-200 font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            Filtered to {filters.state}<X aria-hidden className="icon-size-100" />
+          </button>
+        )}
       </div>
       <div className="grid grid-cols-1 gap-400 xl:grid-cols-[3fr_1fr]">
         <VegaVisual spec={spec} theme={theme} style={{ height: 'calc(var(--spacing-800) * 13)' }} onInteraction={onInteraction} />
         <ol className="flex flex-col divide-y divide-border text-300" aria-label={`Cities ranked by ${m.label}`}>
           {ranked.slice(0, 10).map((p, i) => (
             <li key={`${p.city}-${p.state}`} className="flex items-center justify-between gap-200 py-100">
-              <button type="button" onClick={() => onState(p.state)}
+              <button type="button" onClick={() => toggleState(p.state)} aria-pressed={filters.state === p.state}
                 className={cn('min-w-0 truncate text-left underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   filters.state === p.state && 'font-semibold')}>
                 <span className="mr-100 tabular-nums text-muted-foreground">{i + 1}.</span>{p.city}, {p.state}
