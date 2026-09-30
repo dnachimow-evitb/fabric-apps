@@ -83,7 +83,7 @@ function App() {
           : view === 'identity'
           ? <IdentityView onOpenCustomer={openCustomer} />
           : selected
-            ? <CustomerView key={selected} id={selected} metric={selectedMetric} />
+            ? <CustomerView key={selected} id={selected} metric={selectedMetric} all={everyone.data ?? []} />
             : <p className="text-300 text-muted-foreground">Loading customers…</p>}
       </main>
     </div>

@@ -1,38 +1,71 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { VegaVisual, useCssTheme } from '@microsoft/fabric-visuals';
 import type { VisualizationSpec } from '@microsoft/fabric-visuals';
 import type { DataTable } from '@microsoft/fabric-visuals-core';
-import { AlertTriangle, CircleAlert, CircleCheck, Headset, Mail, Package, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Check, CircleAlert, CircleCheck, GitMerge, Headset, Mail, Package, RotateCcw, X } from 'lucide-react';
 
 import { Card, Empty, Loaded, RiskBadge, Skeleton } from '@/components/ui';
-import { useQuery } from '@/hooks/use-query';
+import { Combobox, type ComboOption } from '@/components/Combobox';
+import { useAuth } from '@/hooks/auth.context';
+import { useQuery, type QueryState } from '@/hooks/use-query';
 import { useChartColors } from '@/lib/chart-colors';
 import {
-  fetchCustomerCascade, fetchCustomerMonthly, fetchCustomerProductLines, fetchCustomerProfile, fetchCustomerSkuRecs, fetchCustomerSkus,
+  fetchCustomerCascade, fetchCustomerMonthly, fetchMergeCandidates, proposeMerge, type MergeCandidateRow, fetchCustomerProductLines, fetchCustomerProfile, fetchCustomerSkuRecs, fetchCustomerSkus,
   fetchCustomerTimeline, fetchCustomerUpsell, parseDrivers, type CustomerMonthRow, type CustomerSkuRow, type SkuRecRow, type MetricRow, type ProductLineRow, type ProfileRow, type TimelineRow, type UpsellRow,
 } from '@/lib/c360';
 import { count, money, pct, shortDate, signedPct } from '@/lib/format';
+import {
+  mergeMetrics, mergeMonthly, mergeProductLines, mergeProfiles, mergeSkuRecs, mergeSkus, mergeTimeline, mergeUpsell,
+} from '@/lib/merge-emulation';
 import { cn } from '@/lib/utils';
 
 const n = (v: unknown) => (typeof v === 'number' ? v : Number(v ?? 0));
 
-export function CustomerView({ id, metric }: { id: string; metric: MetricRow | undefined }) {
-  const profile = useQuery(`profile:${id}`, () => fetchCustomerProfile(id));
-  const monthly = useQuery(`monthly:${id}`, () => fetchCustomerMonthly(id));
-  const lines = useQuery(`lines:${id}`, () => fetchCustomerProductLines(id));
-  const upsell = useQuery(`upsell:${id}`, () => fetchCustomerUpsell(id));
-  const timeline = useQuery(`timeline:${id}`, () => fetchCustomerTimeline(id));
-  const skus = useQuery(`skus:${id}`, () => fetchCustomerSkus(id));
-  const skuRecs = useQuery(`sku-recs:${id}`, () => fetchCustomerSkuRecs(id));
+export function CustomerView({ id, metric, all }: { id: string; metric: MetricRow | undefined; all: MetricRow[] }) {
+  // Merge emulation: extra unified customers previewed as one identity with this one (nothing is saved).
+  const [extra, setExtra] = useState<string[]>([]);
+  const ids = [id, ...extra];
+  const k = ids.join(',');
+  const each = <T,>(f: (x: string) => Promise<T>) => () => Promise.all(ids.map(f));
+  const profiles = useQuery(`profile:${k}`, each(fetchCustomerProfile));
+  const monthlyAll = useQuery(`monthly:${k}`, each(fetchCustomerMonthly));
+  const linesAll = useQuery(`lines:${k}`, each(fetchCustomerProductLines));
+  const upsellAll = useQuery(`upsell:${k}`, each(fetchCustomerUpsell));
+  const timelineAll = useQuery(`timeline:${k}`, each(fetchCustomerTimeline));
+  const skusAll = useQuery(`skus:${k}`, each(fetchCustomerSkus));
+  const skuRecsAll = useQuery(`sku-recs:${k}`, each(fetchCustomerSkuRecs));
   const cascade = useQuery(`cascade:${id}`, () => fetchCustomerCascade(id));
+
+  const merging = extra.length > 0;
+  const profile = useMapped(profiles, combine(mergeProfiles));
+  const monthly = useMapped(monthlyAll, combine(mergeMonthly));
+  const lines = useMapped(linesAll, combine(mergeProductLines));
+  const timeline = useMapped(timelineAll, combine(mergeTimeline));
+  const skus = useMapped(skusAll, combine(mergeSkus));
+  // recommendations drop what the combined customer already buys
+  const upsellData = useMemo(() => (upsellAll.data && lines.data
+    ? (upsellAll.data.length === 1 ? upsellAll.data[0] : mergeUpsell(upsellAll.data, lines.data)) : undefined), [upsellAll.data, lines.data]);
+  const upsell = { ...upsellAll, data: upsellData } as QueryState<UpsellRow[]>;
+  const skuRecsData = useMemo(() => (skuRecsAll.data && skus.data
+    ? (skuRecsAll.data.length === 1 ? skuRecsAll.data[0] : mergeSkuRecs(skuRecsAll.data, skus.data)) : undefined), [skuRecsAll.data, skus.data]);
+  const skuRecs = { ...skuRecsAll, data: skuRecsData } as QueryState<SkuRecRow[]>;
+  const byId = useMemo(() => new Map(all.map((m) => [m.unifiedCustomerId ?? '', m])), [all]);
+  const others = extra.map((x) => byId.get(x));
+  const merged = merging && metric && monthly.data && lines.data && upsell.data
+    ? mergeMetrics(metric, others, monthly.data, lines.data, upsell.data, all)
+    : undefined;
+  const m = merging ? merged : metric;
 
   return (
     <div className="flex flex-col gap-400">
+      <MergePreview id={id} metric={metric} merged={merged} extra={extra} onExtra={setExtra} all={all}
+        profiles={profiles.data ?? []} byId={byId} />
+
       <Loaded q={profile} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*4)]" />}>
-        {(p) => (p ? <ProfileStrip p={p} m={metric} /> : <Card><Empty>This customer isn't in the unified customer table.</Empty></Card>)}
+        {(p) => (p ? <ProfileStrip p={p} m={m} merged={merging ? ids.length : 0} /> : <Card><Empty>This customer isn't in the unified customer table.</Empty></Card>)}
       </Loaded>
 
-      {cascade.data && cascade.data.pattern !== 'Recovered' && (
+      {!merging && cascade.data && cascade.data.pattern !== 'Recovered' && (
         <div role="status" className="flex items-start gap-300 rounded-lg border border-[color:var(--color-status-critical)] bg-card p-400 text-300">
           <AlertTriangle aria-hidden className="mt-100 icon-size-300 shrink-0 text-[color:var(--color-status-critical)]" />
           <div>
@@ -51,7 +84,7 @@ export function CustomerView({ id, metric }: { id: string; metric: MetricRow | u
           </Loaded>
         </Card>
         <Card className="lg:col-span-4" title="Churn risk drivers" subtitle="What moves this customer's score">
-          {metric ? <Drivers m={metric} /> : <Empty>No purchase history to score.</Empty>}
+          {m ? <Drivers m={m} /> : <Empty>No purchase history to score.</Empty>}
         </Card>
 
         <Card className="lg:col-span-5" title="Product line mix & whitespace" subtitle="Share of last-12-month sales. Hatched lines are not yet bought.">
@@ -66,7 +99,7 @@ export function CustomerView({ id, metric }: { id: string; metric: MetricRow | u
         </Card>
         <Card className="lg:col-span-3" title="Returns" subtitle="Last 12 months">
           <Loaded q={monthly} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*8)]" />}>
-            {(rows) => <Returns rows={rows} m={metric} />}
+            {(rows) => <Returns rows={rows} m={m} />}
           </Loaded>
         </Card>
 
@@ -83,12 +116,12 @@ export function CustomerView({ id, metric }: { id: string; metric: MetricRow | u
 
         <Card className="lg:col-span-6" title="Marketing activity" subtitle="Klaviyo campaign touches and engagement, last 12 months">
           <Loaded q={monthly} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*7)]" />}>
-            {(rows) => <Marketing rows={rows} m={metric} p={profile.data ?? null} />}
+            {(rows) => <Marketing rows={rows} m={m} p={profile.data ?? null} />}
           </Loaded>
         </Card>
         <Card className="lg:col-span-6" title="Support" subtitle="Zendesk tickets">
           <Loaded q={timeline} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*7)]" />}>
-            {(rows) => <Support rows={rows} m={metric} />}
+            {(rows) => <Support rows={rows} m={m} />}
           </Loaded>
         </Card>
 
@@ -113,7 +146,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const SOURCES = [['inErp', 'ERP'], ['inShopify', 'Shopify'], ['inKlaviyo', 'Klaviyo'], ['inZendesk', 'Zendesk']] as const;
 
-function ProfileStrip({ p, m }: { p: ProfileRow; m: MetricRow | undefined }) {
+function ProfileStrip({ p, m, merged }: { p: ProfileRow; m: MetricRow | undefined; merged: number }) {
   return (
     <section className="grid grid-cols-1 rounded-lg border border-border bg-card sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1.2fr]">
       <Field label={p.customerType === 'Wholesale' ? 'Wholesale account' : p.customerType === 'Direct' ? 'Direct customer' : p.customerType ?? 'Customer'}>
@@ -144,7 +177,9 @@ function ProfileStrip({ p, m }: { p: ProfileRow; m: MetricRow | undefined }) {
           ))}
         </div>
         <div className="mt-100 text-200 text-muted-foreground">
-          {count(p.linkedSourceRecords)} source records · match confidence {pct(p.identityConfidence, 0)}
+          {merged
+            ? <><strong className="text-foreground">Preview: {merged} records merged</strong> · {count(p.linkedSourceRecords)} source records</>
+            : <>{count(p.linkedSourceRecords)} source records · match confidence {pct(p.identityConfidence, 0)}</>}
         </div>
         <div className="font-[family-name:var(--font-monospace)] text-100 text-muted-foreground">{p.unifiedCustomerId}</div>
       </Field>
@@ -414,5 +449,187 @@ function SkuRecs({ rows }: { rows: SkuRecRow[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Merge preview
+
+/** Maps a query's data (keeping its loading / error state); `f` runs only when the data changes. */
+function useMapped<T, U>(q: QueryState<T>, f: (t: T) => U): QueryState<U> {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const data = useMemo(() => (q.data === undefined ? undefined : f(q.data)), [q.data]);
+  return { ...q, data } as QueryState<U>;
+}
+
+/** One record's list as-is, or several records' lists combined. */
+const combine = <T, U>(f: (lists: T[]) => U) => (lists: T[]): U => (lists.length === 1 ? (lists[0] as unknown as U) : f(lists));
+
+function MergePreview({ id, metric, merged, extra, onExtra, all, profiles, byId }: {
+  id: string; metric: MetricRow | undefined; merged: MetricRow | undefined; extra: string[]; onExtra: (ids: string[]) => void;
+  all: MetricRow[]; profiles: (ProfileRow | null)[]; byId: Map<string, MetricRow>;
+}) {
+  const { session } = useAuth();
+  const email = (session?.user?.email ?? '').toLowerCase();
+  const [open, setOpen] = useState(false);
+  const [proposed, setProposed] = useState<Record<string, 'saving' | 'done' | string>>({});
+  const candidates = useQuery('merge-candidates', fetchMergeCandidates);
+  const suggestions = useMemo(() => (candidates.data ?? [])
+    .filter((c) => c.primaryCustomerId === id || c.secondaryCustomerId === id)
+    .map((c) => {
+      const mine = c.primaryCustomerId === id;
+      return {
+        row: c, other: (mine ? c.secondaryCustomerId : c.primaryCustomerId) ?? '',
+        name: (mine ? c.secondaryCustomerName : c.primaryCustomerName) ?? '', type: (mine ? c.secondaryCustomerType : c.primaryCustomerType) ?? '',
+        score: n(c.score), reasons: c.reasons ?? '',
+      };
+    })
+    .sort((a, b) => b.score - a.score), [candidates.data, id]);
+  const options = useMemo<ComboOption[]>(() => {
+    const seen = new Set<string>([id]);
+    const out: ComboOption[] = [];
+    for (const s of suggestions) if (!seen.has(s.other)) { seen.add(s.other); out.push({ value: s.other, label: s.name, hint: `${s.type} · suggested ${pct(s.score, 0)}` }); }
+    for (const r of [...all].sort((a, b) => (a.customerName ?? '').localeCompare(b.customerName ?? ''))) {
+      const v = r.unifiedCustomerId ?? '';
+      if (!v || seen.has(v)) continue;
+      seen.add(v);
+      out.push({ value: v, label: r.customerName ?? v, hint: [r.customerType, r.city && r.state ? `${r.city}, ${r.state}` : null].filter(Boolean).join(' · ') });
+    }
+    return out;
+  }, [all, id, suggestions]);
+  const nameOf = (x: string) => byId.get(x)?.customerName ?? profiles.find((p) => p?.unifiedCustomerId === x)?.customerName
+    ?? suggestions.find((s) => s.other === x)?.name ?? x;
+
+  const propose = async (other: string) => {
+    const s = suggestions.find((x) => x.other === other);
+    const candidate = s?.row ?? ({
+      primaryCustomerId: id, secondaryCustomerId: other, primaryCustomerName: nameOf(id), secondaryCustomerName: nameOf(other),
+    } as MergeCandidateRow);
+    setProposed((p) => ({ ...p, [other]: 'saving' }));
+    try {
+      await proposeMerge(candidate, email || 'unknown', 'Proposed from the Customer 360 merge preview');
+      setProposed((p) => ({ ...p, [other]: 'done' }));
+    } catch (e) {
+      setProposed((p) => ({ ...p, [other]: e instanceof Error ? e.message : String(e) }));
+    }
+  };
+
+  if (!open && !extra.length) {
+    return (
+      <section className="flex flex-wrap items-center justify-between gap-300 rounded-lg border border-dashed border-border bg-card px-400 py-300">
+        <div className="flex items-start gap-200 text-300">
+          <GitMerge aria-hidden className="mt-100 icon-size-200 text-muted-foreground" />
+          <span>
+            <strong className="font-semibold">Preview a merge.</strong>{' '}
+            <span className="text-muted-foreground">See this customer combined with other records as one identity, re-scored, before anyone proposes it. Nothing is saved.</span>
+            {suggestions.length > 0 && <span className="ml-100 rounded-full bg-muted px-200 text-200 font-semibold">{suggestions.length} likely match{suggestions.length > 1 ? 'es' : ''}</span>}
+          </span>
+        </div>
+        <button type="button" onClick={() => { setOpen(true); if (suggestions[0]) onExtra([suggestions[0].other]); }}
+          className="inline-flex items-center gap-100 rounded-md border border-foreground px-300 py-200 font-heading text-200 font-semibold uppercase tracking-wider hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <GitMerge aria-hidden className="icon-size-200" />{suggestions.length ? 'Preview the likely match' : 'Preview a merge'}
+        </button>
+      </section>
+    );
+  }
+
+  const rows = [id, ...extra].map((x) => ({ id: x, m: x === id ? metric : byId.get(x), p: profiles.find((p) => p?.unifiedCustomerId === x) ?? null }));
+  const systems = (p: ProfileRow | null) => [p?.inErp && 'ERP', p?.inShopify && 'Shopify', p?.inKlaviyo && 'Klaviyo', p?.inZendesk && 'Zendesk'].filter(Boolean).join(', ') || '—';
+  const TH = 'px-300 py-200 text-left font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground';
+  const TD = 'px-300 py-200 align-top';
+  return (
+    <section className="flex flex-col gap-300 rounded-lg border-2 border-primary bg-card p-400" aria-labelledby="merge-preview-title">
+      <header className="flex flex-wrap items-start justify-between gap-300">
+        <div>
+          <h2 id="merge-preview-title" className="flex items-center gap-200 font-heading text-400 font-semibold uppercase tracking-wider">
+            <GitMerge aria-hidden className="icon-size-300" />Merge preview
+          </h2>
+          <p className="text-200 text-muted-foreground">
+            {extra.length
+              ? `Showing ${extra.length + 1} records as one identity. Every card below is the combined customer, re-scored with the same rules as the Fabric rebuild. Nothing is saved.`
+              : 'Add the records you think are the same customer.'}
+          </p>
+        </div>
+        <button type="button" onClick={() => { onExtra([]); setOpen(false); }}
+          className="inline-flex items-center gap-100 rounded-md border border-border px-300 py-200 text-200 font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <X aria-hidden className="icon-size-200" />Stop preview
+        </button>
+      </header>
+
+      <div className="flex flex-wrap items-end gap-300">
+        <Combobox multiple label="Records to combine" value={extra} onChange={onExtra} options={options} allLabel="None"
+          placeholder="Search by name, type or city…" widthClass="min-w-[calc(var(--spacing-800)*10)]" />
+        {suggestions.filter((s) => !extra.includes(s.other)).slice(0, 3).map((s) => (
+          <button key={s.other} type="button" onClick={() => onExtra([...extra, s.other])} title={s.reasons}
+            className="rounded-full border border-dashed border-foreground/50 px-300 py-100 text-200 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            + {s.name} <span className="text-muted-foreground">· {pct(s.score, 0)} match</span>
+          </button>
+        ))}
+      </div>
+
+      {extra.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-300">
+            <thead>
+              <tr className="border-b border-border">
+                <th className={TH}>Record</th><th className={TH}>Systems</th><th className={cn(TH, 'text-right')}>Net sales · 12 mo</th>
+                <th className={cn(TH, 'text-right')}>Orders</th><th className={cn(TH, 'text-right')}>Lines</th><th className={TH}>Churn risk</th>
+                <th className={cn(TH, 'text-right')}>Upsell est.</th><th className={TH}>Merge</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => {
+                const s = suggestions.find((x) => x.other === r.id);
+                const state = proposed[r.id];
+                return (
+                  <tr key={r.id} className="border-b border-border">
+                    <td className={TD}>
+                      <div className="font-semibold">{nameOf(r.id)}{i === 0 && <span className="ml-100 rounded-sm bg-muted px-100 text-100 uppercase tracking-wider">survivor</span>}</div>
+                      <div className="text-200 text-muted-foreground">
+                        {[r.p?.customerType ?? r.m?.customerType, r.p?.primaryEmail, s && `${pct(s.score, 0)} match: ${s.reasons}`].filter(Boolean).join(' · ')}
+                      </div>
+                    </td>
+                    <td className={cn(TD, 'text-200')}>{systems(r.p)}</td>
+                    <td className={cn(TD, 'text-right tabular-nums')}>{money(r.m?.netSalesTtm ?? 0)}</td>
+                    <td className={cn(TD, 'text-right tabular-nums')}>{count(r.m?.ordersTtm ?? 0)}</td>
+                    <td className={cn(TD, 'text-right tabular-nums')}>{count(r.m?.productLinesTtm ?? 0)}</td>
+                    <td className={TD}>{r.m ? <RiskBadge band={r.m.churnRiskBand} score={r.m.churnRiskScore} /> : <span className="text-200 text-muted-foreground">not scored</span>}</td>
+                    <td className={cn(TD, 'text-right tabular-nums')}>{money(r.m?.upsellValueEst ?? 0)}</td>
+                    <td className={TD}>
+                      {i === 0 ? <span className="text-200 text-muted-foreground">keeps this ID</span>
+                        : state === 'done' ? <span className="inline-flex items-center gap-100 text-200 font-semibold text-[color:var(--color-status-good)]"><Check aria-hidden className="icon-size-100" />Proposed</span>
+                        : state === 'saving' ? <span className="text-200 text-muted-foreground">Saving…</span>
+                        : (
+                          <>
+                            <button type="button" onClick={() => void propose(r.id)}
+                              className="rounded-md border border-foreground px-200 py-100 text-200 font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                              Propose merge
+                            </button>
+                            {state && <div role="alert" className="mt-100 text-200 text-[color:var(--color-status-critical)]">{state}</div>}
+                          </>
+                        )}
+                    </td>
+                  </tr>
+                );
+              })}
+              <tr className="bg-muted/50 font-semibold">
+                <td className={TD}>Combined identity</td>
+                <td className={cn(TD, 'text-200')}>{systems(mergeProfiles(rows.map((r) => r.p)))}</td>
+                <td className={cn(TD, 'text-right tabular-nums')}>{money(merged?.netSalesTtm)}</td>
+                <td className={cn(TD, 'text-right tabular-nums')}>{count(merged?.ordersTtm)}</td>
+                <td className={cn(TD, 'text-right tabular-nums')}>{count(merged?.productLinesTtm)}</td>
+                <td className={TD}>{merged ? <RiskBadge band={merged.churnRiskBand} score={merged.churnRiskScore} /> : '…'}</td>
+                <td className={cn(TD, 'text-right tabular-nums')}>{money(merged?.upsellValueEst)}</td>
+                <td className={cn(TD, 'text-200 font-normal text-muted-foreground')}>preview only</td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="mt-200 text-200 text-muted-foreground">
+            Proposals go to the Identity page for a data steward to approve; approved merges are applied on the next Fabric rebuild.
+            Prospects and unresolved records have no sales facts, so they add identity (systems, consent, activity) but not revenue.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
