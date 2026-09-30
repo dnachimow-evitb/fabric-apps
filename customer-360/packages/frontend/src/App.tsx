@@ -5,6 +5,7 @@ import { useQuery } from '@/hooks/use-query';
 import { useTheme } from '@/hooks/theme.context';
 import { ALL_FILTERS, fetchMetrics, slicerKey, type Filters } from '@/lib/c360';
 import { FilterBar } from '@/components/FilterBar';
+import { applyFilterChange, filterOptions } from '@/lib/filter-options';
 import { Combobox, type ComboOption } from '@/components/Combobox';
 import { cn } from '@/lib/utils';
 import { CustomerView } from '@/views/CustomerView';
@@ -27,14 +28,9 @@ function App() {
   // Unfiltered list for the customer picker and the filter options.
   const everyone = useQuery('metrics:all', () => fetchMetrics(ALL_FILTERS));
 
-  const options = useMemo(() => {
-    const rows = everyone.data ?? [];
-    const uniq = (xs: (string | null | undefined)[]) => [...new Set(xs.filter((x): x is string => !!x))].sort();
-    return {
-      regions: uniq(rows.map((r) => r.region)), states: uniq(rows.map((r) => r.state)), owners: uniq(rows.map((r) => r.accountManager)),
-      productLines: uniq(rows.flatMap((r) => (r.productLinesBought ?? '').split('|'))),
-    };
-  }, [everyone.data]);
+  // Slicers are dependent: each lists only values that exist under the other selections (e.g. region → states).
+  const options = useMemo(() => filterOptions(everyone.data ?? [], filters), [everyone.data, filters]);
+  const changeFilters = (next: Filters) => setFilters((prev) => applyFilterChange(everyone.data ?? [], prev, next));
 
   const openCustomer = (id: string) => { setCustomerId(id); setView('customer'); window.scrollTo({ top: 0 }); };
   const selected = customerId ?? [...(everyone.data ?? [])].sort((a, b) => Number(b.priorityScore ?? 0) - Number(a.priorityScore ?? 0))[0]?.unifiedCustomerId ?? null;
@@ -66,7 +62,7 @@ function App() {
 
       <main className="mx-auto flex max-w-[calc(var(--spacing-800)*44)] flex-col gap-400 px-600 py-500">
         {view === 'portfolio' || view === 'risk' ? (
-          <FilterBar filters={filters} onChange={setFilters} options={options} showDate={view === 'portfolio'} />
+          <FilterBar filters={filters} onChange={changeFilters} options={options} showDate={view === 'portfolio'} />
         ) : view === 'customer' ? (
           <div className="flex flex-wrap items-end gap-300">
             <button type="button" onClick={() => setView('portfolio')}
@@ -78,7 +74,7 @@ function App() {
         ) : null}
 
         {view === 'portfolio'
-          ? <PortfolioView filters={filters} metrics={metrics} onOpenCustomer={openCustomer} onFilters={setFilters} />
+          ? <PortfolioView filters={filters} metrics={metrics} onOpenCustomer={openCustomer} onFilters={changeFilters} />
           : view === 'risk'
           ? <RiskView filters={filters} onOpenCustomer={openCustomer} />
           : view === 'identity'

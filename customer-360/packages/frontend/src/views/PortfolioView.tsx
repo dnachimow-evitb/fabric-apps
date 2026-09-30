@@ -14,6 +14,7 @@ import { count, money, pct, signedPct } from '@/lib/format';
 import type { QueryState } from '@/hooks/use-query';
 import { SkuExplorer } from '@/views/SkuExplorer';
 import { CustomerMap } from '@/views/CustomerMap';
+import { DataLineage } from '@/views/DataLineage';
 
 const n = (v: unknown) => (typeof v === 'number' ? v : Number(v ?? 0));
 
@@ -84,6 +85,10 @@ export function PortfolioView({ filters, metrics, onOpenCustomer, onFilters }: {
             {(rows) => <PriorityTable rows={rows} onOpen={onOpenCustomer} />}
           </Loaded>
         </Card>
+
+        <div className="lg:col-span-12">
+          <DataLineage filters={filters} />
+        </div>
       </div>
     </div>
   );

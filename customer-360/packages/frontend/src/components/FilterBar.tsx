@@ -4,14 +4,14 @@ import { CalendarRange, SlidersHorizontal, X } from 'lucide-react';
 import { Combobox, type ComboOption } from '@/components/Combobox';
 
 import {
-  ALL_FILTERS, DATE_PRESETS, FIRST_MONTH, LAST_MONTH, LIFECYCLE_STAGES, RISK_BANDS, cityLabel, presetRange, rangeLabel,
-  type DatePreset, type Filters,
+  ALL_FILTERS, DATE_PRESETS, FIRST_MONTH, LAST_MONTH, cityLabel, presetRange, rangeLabel, type DatePreset, type Filters,
 } from '@/lib/c360';
+import type { FilterOptions } from '@/lib/filter-options';
 import { cn } from '@/lib/utils';
 
-export interface FilterOptions { regions: string[]; states: string[]; owners: string[]; productLines: string[] }
-
 const FIELD = 'rounded-md border border-input bg-card px-300 py-200 text-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+
+const TYPE_LABEL: Record<string, string> = { Wholesale: 'Wholesale (B2B)', Direct: 'Direct (B2C)' };
 
 const opts = (xs: readonly string[]): ComboOption[] => xs.map((x) => ({ value: x, label: x }));
 
@@ -63,7 +63,7 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
         )}
         <Combobox label="Customer type" value={filters.customerType} allLabel="All customers"
           onChange={(v) => set({ customerType: v as Filters['customerType'] })}
-          options={[{ value: 'Wholesale', label: 'Wholesale (B2B)' }, { value: 'Direct', label: 'Direct (B2C)' }]} />
+          options={options.customerTypes.map((t) => ({ value: t, label: TYPE_LABEL[t] ?? t }))} />
         <Combobox label="Region" value={filters.region} allLabel="All regions" onChange={(v) => set({ region: v })} options={opts(options.regions)} />
         <Combobox multiple label="State" value={filters.states} allLabel="All states" onChange={(states) => set({ states })} options={opts(options.states)} />
         <Combobox label="Account owner" value={filters.owner} allLabel="All owners" onChange={(v) => set({ owner: v })} options={opts(options.owners)} />
@@ -82,8 +82,8 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
 
       {more && (
         <div className="flex flex-wrap items-end gap-300 border-t border-border pt-300">
-          <Combobox label="Churn risk" value={filters.riskBand} allLabel="Any risk" onChange={(v) => set({ riskBand: v })} options={opts(RISK_BANDS)} />
-          <Combobox label="Lifecycle" value={filters.lifecycle} allLabel="Any stage" onChange={(v) => set({ lifecycle: v })} options={opts(LIFECYCLE_STAGES)} />
+          <Combobox label="Churn risk" value={filters.riskBand} allLabel="Any risk" onChange={(v) => set({ riskBand: v })} options={opts(options.riskBands)} />
+          <Combobox label="Lifecycle" value={filters.lifecycle} allLabel="Any stage" onChange={(v) => set({ lifecycle: v })} options={opts(options.lifecycles)} />
           <Combobox label="Buys product line" value={filters.productLine} allLabel="Any product line"
             onChange={(v) => set({ productLine: v })} options={opts(options.productLines)} />
           <label className="flex items-center gap-200 self-end py-200 text-300">
