@@ -18,18 +18,20 @@
   "scripts": {
     "dev": "rayfin dev",
     "dev:frontend": "npm run -w @rayfin-app/frontend dev",
-    "build": "npm run -w @rayfin-app/data build && npm run -w @rayfin-app/frontend build",
-    "build:fabric": "npm run -w @rayfin-app/data build && npm run -w @rayfin-app/frontend build:fabric",
+    "build": "npm run -w @rayfin-app/shared build && node scripts/validate-functions.mjs && npm run -w @rayfin-app/functions build && npm run -w @rayfin-app/data build && npm run -w @rayfin-app/frontend build",
+    "build:fabric": "npm run -w @rayfin-app/shared build && node scripts/validate-functions.mjs && npm run -w @rayfin-app/functions build && npm run -w @rayfin-app/data build && npm run -w @rayfin-app/frontend build:fabric",
     "lint": "npm run -w @rayfin-app/frontend lint",
     "preview": "npm run -w @rayfin-app/frontend preview",
     "test": "npm run -w @rayfin-app/frontend test",
     "test:watch": "npm run -w @rayfin-app/frontend test:watch",
-    "typecheck": "tsc -b",
+    "typecheck": "npm run -w @rayfin-app/shared build && node scripts/validate-functions.mjs && npm run -w @rayfin-app/functions build && tsc -b",
     "pack:add": "node scripts/scaffold.mjs",
     "test:template": "node scripts/run-template-tests.mjs",
     "rayfin:up": "rayfin up",
     "validate:visual": "node scripts/validate-visual.mjs",
-    "validate:visual:preview": "node scripts/validate-visual.mjs --allow-incomplete"
+    "validate:visual:preview": "node scripts/validate-visual.mjs --allow-incomplete",
+    "functions:build": "npm run -w @rayfin-app/functions build",
+    "validate:functions": "npm run -w @rayfin-app/shared build && node scripts/validate-functions.mjs"
   },
   "devDependencies": {
     "@microsoft/rayfin-cli": "^1.36.0-alpha",
@@ -44,6 +46,7 @@
   "rayfinPacks": [
     "connectors",
     "data-modeling",
+    "functions",
     "visuals"
   ]
 }

@@ -29,3 +29,4 @@ export type UniversalAppSchema = {
 
 /** Mirrors DATA_STEWARDS in @rayfin-app/data (server-enforced there); used only to show or hide review controls. */
 export const DATA_STEWARD_EMAILS: readonly string[] = ['dnachimow@dsdemo.net'];
+export * from './qa-catalog.js';

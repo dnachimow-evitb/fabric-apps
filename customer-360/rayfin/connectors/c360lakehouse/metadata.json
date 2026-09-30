@@ -2,11 +2,101 @@
   "source": "c360lakehouse",
   "connector": "fabric-sqlanalytics",
   "connectionString": "vao7ifoxtvoehl4ecclxofah7m-ompzpkfx7qrujc3an262ue76le.datawarehouse.fabric.microsoft.com",
-  "discoveredAt": "2026-09-29T20:38:09.823Z",
+  "discoveredAt": "2026-09-30T13:06:45.819Z",
   "schemas": [
     {
       "schemaName": "dbo",
       "tables": [
+        {
+          "tableName": "app_merge_proposal",
+          "columns": [
+            {
+              "columnName": "id",
+              "dataType": "varchar",
+              "isNullable": false,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "candidateId",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "matchScore",
+              "dataType": "decimal",
+              "isNullable": true,
+              "precision": 5,
+              "scale": 3
+            },
+            {
+              "columnName": "note",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "primaryCustomerId",
+              "dataType": "varchar",
+              "isNullable": false,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "primaryName",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "proposedAt",
+              "dataType": "datetime2",
+              "isNullable": false,
+              "datePrecision": 6
+            },
+            {
+              "columnName": "proposedBy",
+              "dataType": "varchar",
+              "isNullable": false,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "reviewNote",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "reviewedAt",
+              "dataType": "datetime2",
+              "isNullable": true,
+              "datePrecision": 6
+            },
+            {
+              "columnName": "reviewedBy",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "secondaryCustomerId",
+              "dataType": "varchar",
+              "isNullable": false,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "secondaryName",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "status",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            }
+          ]
+        },
         {
           "tableName": "bronze_klaviyo_campaigns",
           "columns": [
@@ -1326,6 +1416,42 @@
               "dataType": "date",
               "isNullable": true,
               "datePrecision": 0
+            },
+            {
+              "columnName": "city",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "state",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "lifecycle_stage",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "latitude",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "longitude",
+              "dataType": "float",
+              "isNullable": true,
+              "precision": 53
+            },
+            {
+              "columnName": "product_lines_bought",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
             }
           ]
         },
@@ -1352,6 +1478,41 @@
             },
             {
               "columnName": "account_manager",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "state",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "city",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "churn_risk_band",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "lifecycle_stage",
+              "dataType": "varchar",
+              "isNullable": true,
+              "maxLength": 8000
+            },
+            {
+              "columnName": "is_pro_member",
+              "dataType": "bit",
+              "isNullable": true
+            },
+            {
+              "columnName": "product_lines_bought",
               "dataType": "varchar",
               "isNullable": true,
               "maxLength": 8000

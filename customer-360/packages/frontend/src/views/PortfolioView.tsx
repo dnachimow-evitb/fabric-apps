@@ -7,19 +7,25 @@ import { Card, Empty, Kpi, Loaded, Meter, RiskBadge, Skeleton } from '@/componen
 import { useQuery } from '@/hooks/use-query';
 import { TYPE_DOMAIN, useChartColors } from '@/lib/chart-colors';
 import {
-  fetchMonthlyTrend, fetchPenetration, type Filters, type MetricRow, type PenetrationRow, type TrendRow,
+  fetchMonthlyTrend, fetchPenetration, fetchRangeByCity, fetchRangeTotals, previousRange, rangeLabel,
+  type Filters, type MetricRow, type PenetrationRow, type RangeTotals, type TrendRow,
 } from '@/lib/c360';
 import { count, money, pct, signedPct } from '@/lib/format';
 import type { QueryState } from '@/hooks/use-query';
 import { SkuExplorer } from '@/views/SkuExplorer';
+import { CustomerMap } from '@/views/CustomerMap';
 
 const n = (v: unknown) => (typeof v === 'number' ? v : Number(v ?? 0));
 
-export function PortfolioView({ filters, metrics, onOpenCustomer }: {
-  filters: Filters; metrics: QueryState<MetricRow[]>; onOpenCustomer: (id: string) => void;
+export function PortfolioView({ filters, metrics, onOpenCustomer, onFilters }: {
+  filters: Filters; metrics: QueryState<MetricRow[]>; onOpenCustomer: (id: string) => void; onFilters: (f: Filters) => void;
 }) {
   const fkey = JSON.stringify(filters);
+  const prev = previousRange(filters.range);
   const trend = useQuery(`trend:${fkey}`, () => fetchMonthlyTrend(filters));
+  const totals = useQuery(`totals:${fkey}`, () => fetchRangeTotals(filters, filters.range));
+  const prevTotals = useQuery(`prev:${fkey}`, () => (prev ? fetchRangeTotals(filters, prev) : Promise.resolve(null)));
+  const cities = useQuery(`cities:${fkey}`, () => fetchRangeByCity(filters, filters.range));
   const penetration = useQuery('penetration', fetchPenetration);
   const [line, setLine] = useState<string | null>(null);
   const [sku, setSku] = useState<string | null>(null);
@@ -28,8 +34,16 @@ export function PortfolioView({ filters, metrics, onOpenCustomer }: {
   return (
     <div className="flex flex-col gap-400">
       <Loaded q={metrics} skeleton={<div className="grid grid-cols-2 gap-400 lg:grid-cols-6">{Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-[calc(var(--spacing-800)*3)]" />)}</div>}>
-        {(rows) => <KpiStrip rows={rows} />}
+        {(rows) => <KpiStrip rows={rows} totals={totals.data} prev={prevTotals.data ?? null} filters={filters} />}
       </Loaded>
+
+      <Card title="Customer map" subtitle="Customers by city. Pick the metric; bubble size and colour show it.">
+        <Loaded q={cities} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*13)]" />}>
+          {(rows) => (metrics.data
+            ? <CustomerMap metrics={metrics.data} cities={rows} filters={filters} onState={(state) => onFilters({ ...filters, state })} />
+            : <Skeleton className="h-[calc(var(--spacing-800)*13)]" />)}
+        </Loaded>
+      </Card>
 
       <div className="grid grid-cols-1 gap-400 lg:grid-cols-12">
         <Card className="lg:col-span-7" title="Churn risk × upsell opportunity"
@@ -44,7 +58,7 @@ export function PortfolioView({ filters, metrics, onOpenCustomer }: {
           </Loaded>
         </Card>
 
-        <Card className="lg:col-span-7" title="Net sales and returns" subtitle="Monthly, last 24 months. Returns on their own scale below.">
+        <Card className="lg:col-span-7" title="Net sales and returns" subtitle={`Monthly, ${rangeLabel(filters.range)}. Returns on their own scale below.`}>
           <Loaded q={trend} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*10)]" />}>
             {(rows) => rows.length ? <Trend rows={rows} /> : <Empty>No sales in this period.</Empty>}
           </Loaded>
@@ -70,25 +84,28 @@ export function PortfolioView({ filters, metrics, onOpenCustomer }: {
   );
 }
 
-function KpiStrip({ rows }: { rows: MetricRow[] }) {
-  const sales = rows.reduce((s, r) => s + n(r.netSalesTtm), 0);
-  const prior = rows.reduce((s, r) => s + n(r.netSalesPriorTtm), 0);
-  const returns = rows.reduce((s, r) => s + n(r.returnsTtm), 0);
+function KpiStrip({ rows, totals, prev, filters }: {
+  rows: MetricRow[]; totals: RangeTotals | undefined; prev: RangeTotals | null; filters: Filters;
+}) {
   const risk = rows.reduce((s, r) => s + n(r.revenueAtRisk), 0);
   const high = rows.filter((r) => r.churnRiskBand === 'High').length;
   const upsell = rows.reduce((s, r) => s + n(r.upsellValueEst), 0);
   const active = rows.filter((r) => n(r.ordersTtm) > 0);
   const lines = active.reduce((s, r) => s + n(r.productLinesTtm), 0) / (active.length || 1);
-  const tickets = rows.reduce((s, r) => s + n(r.openTickets), 0);
-  const yoy = prior > 0 ? sales / prior - 1 : NaN;
+  const label = rangeLabel(filters.range);
+  const change = (cur: number, before: number | undefined) =>
+    prev && before ? <span>{signedPct(cur / before - 1, 1)} vs. previous period</span> : <span>{label}</span>;
+  const sales = totals?.netSales ?? NaN;
+  const returnRate = totals && totals.netSales ? totals.returns / totals.netSales : NaN;
+  const engagement = totals && totals.touches ? totals.engagements / totals.touches : NaN;
   return (
     <div className="grid grid-cols-2 gap-400 md:grid-cols-3 xl:grid-cols-6">
-      <Kpi accent label="Net sales · last 12 months" value={money(sales)} detail={<span>{signedPct(yoy, 1)} vs. prior year</span>} />
-      <Kpi label="Active customers" value={count(active.length)} detail={`${count(rows.length)} customers in view`} />
-      <Kpi label="Return rate" value={pct(sales ? returns / sales : NaN)} detail={`${money(returns)} refunded`} />
-      <Kpi label="Revenue at risk" value={money(risk)} detail={`${count(high)} high-risk customers`} />
-      <Kpi label="Upsell opportunity" value={money(upsell)} detail="Est. annual, top 3 lines per customer" />
-      <Kpi label="Product lines / customer" value={lines.toFixed(1)} detail={`${count(tickets)} open support tickets`} />
+      <Kpi accent label="Net sales" value={money(sales)} detail={totals ? change(totals.netSales, prev?.netSales) : 'Loading…'} />
+      <Kpi label="Return rate" value={pct(returnRate)} detail={totals ? `${money(totals.returns)} refunded · ${label}` : 'Loading…'} />
+      <Kpi label="Marketing engagement" value={pct(engagement)} detail={totals ? `${count(totals.tickets)} support tickets · ${label}` : 'Loading…'} />
+      <Kpi label="Revenue at risk" value={money(risk)} detail={`${count(high)} high-risk customers · today`} />
+      <Kpi label="Upsell opportunity" value={money(upsell)} detail="Est. annual · today" />
+      <Kpi label="Product lines / customer" value={lines.toFixed(1)} detail={`${count(active.length)} active in last 12 months`} />
     </div>
   );
 }

@@ -3,12 +3,14 @@ import { Moon, Sun } from 'lucide-react';
 
 import { useQuery } from '@/hooks/use-query';
 import { useTheme } from '@/hooks/theme.context';
-import { ALL_FILTERS, fetchMetrics, type Filters } from '@/lib/c360';
+import { ALL_FILTERS, fetchMetrics, slicerKey, type Filters } from '@/lib/c360';
+import { FilterBar } from '@/components/FilterBar';
 import { cn } from '@/lib/utils';
 import { CustomerView } from '@/views/CustomerView';
 import { PortfolioView } from '@/views/PortfolioView';
 import { RiskView } from '@/views/RiskView';
 import { IdentityView } from '@/views/IdentityView';
+import { AskPanel } from '@/components/AskPanel';
 
 type View = 'portfolio' | 'risk' | 'customer' | 'identity';
 
@@ -20,14 +22,18 @@ function App() {
   const [filters, setFilters] = useState<Filters>(ALL_FILTERS);
   const [customerId, setCustomerId] = useState<string | null>(null);
 
-  const metrics = useQuery(`metrics:${JSON.stringify(filters)}`, () => fetchMetrics(filters));
+  // Customer snapshot rows depend on the slicers only, so changing the date range doesn't refetch them.
+  const metrics = useQuery(`metrics:${slicerKey(filters)}`, () => fetchMetrics(filters));
   // Unfiltered list for the customer picker and the filter options.
   const everyone = useQuery('metrics:all', () => fetchMetrics(ALL_FILTERS));
 
   const options = useMemo(() => {
     const rows = everyone.data ?? [];
     const uniq = (xs: (string | null | undefined)[]) => [...new Set(xs.filter((x): x is string => !!x))].sort();
-    return { regions: uniq(rows.map((r) => r.region)), owners: uniq(rows.map((r) => r.accountManager)) };
+    return {
+      regions: uniq(rows.map((r) => r.region)), states: uniq(rows.map((r) => r.state)), owners: uniq(rows.map((r) => r.accountManager)),
+      productLines: uniq(rows.flatMap((r) => (r.productLinesBought ?? '').split('|'))),
+    };
   }, [everyone.data]);
 
   const openCustomer = (id: string) => { setCustomerId(id); setView('customer'); window.scrollTo({ top: 0 }); };
@@ -60,16 +66,7 @@ function App() {
 
       <main className="mx-auto flex max-w-[calc(var(--spacing-800)*44)] flex-col gap-400 px-600 py-500">
         {view === 'portfolio' || view === 'risk' ? (
-          <div className="flex flex-wrap items-end gap-300" role="group" aria-label="Filters">
-            <Select label="Customer type" value={filters.customerType}
-              onChange={(v) => setFilters({ ...filters, customerType: v as Filters['customerType'] })}
-              options={[['all', 'All customers'], ['Wholesale', 'Wholesale (B2B)'], ['Direct', 'Direct (B2C)']]} />
-            <Select label="Region" value={filters.region} onChange={(v) => setFilters({ ...filters, region: v })}
-              options={[['all', 'All regions'], ...options.regions.map((r) => [r, r] as [string, string])]} />
-            <Select label="Account owner" value={filters.owner} onChange={(v) => setFilters({ ...filters, owner: v })}
-              options={[['all', 'All owners'], ...options.owners.map((o) => [o, o] as [string, string])]} />
-            <p className="ml-auto text-200 text-muted-foreground">Test data · scores as of 28 Sep 2026</p>
-          </div>
+          <FilterBar filters={filters} onChange={setFilters} options={options} showDate={view === 'portfolio'} />
         ) : view === 'customer' ? (
           <div className="flex flex-wrap items-end gap-300">
             <button type="button" onClick={() => setView('portfolio')}
@@ -81,7 +78,7 @@ function App() {
         ) : null}
 
         {view === 'portfolio'
-          ? <PortfolioView filters={filters} metrics={metrics} onOpenCustomer={openCustomer} />
+          ? <PortfolioView filters={filters} metrics={metrics} onOpenCustomer={openCustomer} onFilters={setFilters} />
           : view === 'risk'
           ? <RiskView filters={filters} onOpenCustomer={openCustomer} />
           : view === 'identity'
@@ -90,21 +87,8 @@ function App() {
             ? <CustomerView key={selected} id={selected} metric={selectedMetric} />
             : <p className="text-300 text-muted-foreground">Loading customers…</p>}
       </main>
+      <AskPanel />
     </div>
-  );
-}
-
-function Select({ label, value, onChange, options }: {
-  label: string; value: string; onChange: (v: string) => void; options: [string, string][];
-}) {
-  return (
-    <label className="flex flex-col gap-100">
-      <span className="font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-      <select value={value} onChange={(e) => onChange(e.target.value)}
-        className="min-w-[calc(var(--spacing-800)*5)] rounded-md border border-input bg-card px-300 py-200 text-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-      </select>
-    </label>
   );
 }
 

@@ -42,4 +42,10 @@ export class GoldCustomerMetrics extends Source({ schema: 'dbo', table: 'gold_cu
   @decimal({ optional: true, column: 'priority_score', precision: 14, scale: 2 }) priorityScore?: number;
   @text({ optional: true, column: 'next_best_action', max: 8000 }) nextBestAction?: string;
   @date({ optional: true, column: 'as_of_date' }) asOfDate?: Date;
+  @text({ optional: true, max: 8000 }) city?: string;
+  @text({ optional: true, max: 8000 }) state?: string;
+  @text({ optional: true, column: 'lifecycle_stage', max: 8000 }) lifecycleStage?: string;
+  @decimal({ optional: true }) latitude?: number;
+  @decimal({ optional: true }) longitude?: number;
+  @text({ optional: true, column: 'product_lines_bought', max: 8000 }) productLinesBought?: string;
 }

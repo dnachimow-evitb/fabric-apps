@@ -4,28 +4,139 @@ import { getRayfinClient } from './rayfin-client';
 
 export type CustomerType = 'Wholesale' | 'Direct';
 
+// ---------------------------------------------------------------------------------------------
+// Date range (month precision: sales, returns, marketing and tickets are stored per customer-month)
+
+/** First and last month of the data (as of 2026-09-28). */
+export const FIRST_MONTH = '2024-10';
+export const LAST_MONTH = '2026-09';
+
+export const DATE_PRESETS = [
+  { id: 'last3', label: 'Last 3 months' },
+  { id: 'last6', label: 'Last 6 months' },
+  { id: 'last12', label: 'Last 12 months' },
+  { id: 'ytd', label: 'Year to date (2026)' },
+  { id: 'thisQ', label: 'This quarter (Q3 2026)' },
+  { id: 'lastQ', label: 'Last quarter (Q2 2026)' },
+  { id: 'cal2025', label: 'Calendar 2025' },
+  { id: 'prior12', label: 'Prior 12 months' },
+  { id: 'all', label: 'All data (24 months)' },
+  { id: 'custom', label: 'Custom range' },
+] as const;
+export type DatePreset = (typeof DATE_PRESETS)[number]['id'];
+
+export interface DateRange { preset: DatePreset; from: string; to: string }
+
+function addMonths(ym: string, n: number): string {
+  const [y, m] = ym.split('-').map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + n, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+export function monthsBetween(from: string, to: string): number {
+  const [fy, fm] = from.split('-').map(Number);
+  const [ty, tm] = to.split('-').map(Number);
+  return (ty - fy) * 12 + (tm - fm) + 1;
+}
+
+export function presetRange(preset: DatePreset, custom?: { from: string; to: string }): DateRange {
+  const r = (from: string, to: string): DateRange => ({ preset, from, to });
+  switch (preset) {
+    case 'last3': return r(addMonths(LAST_MONTH, -2), LAST_MONTH);
+    case 'last6': return r(addMonths(LAST_MONTH, -5), LAST_MONTH);
+    case 'ytd': return r('2026-01', LAST_MONTH);
+    case 'thisQ': return r('2026-07', '2026-09');
+    case 'lastQ': return r('2026-04', '2026-06');
+    case 'cal2025': return r('2025-01', '2025-12');
+    case 'prior12': return r(addMonths(LAST_MONTH, -23), addMonths(LAST_MONTH, -12));
+    case 'all': return r(FIRST_MONTH, LAST_MONTH);
+    case 'custom': {
+      const from = custom?.from && custom.from >= FIRST_MONTH ? custom.from : addMonths(LAST_MONTH, -11);
+      const to = custom?.to && custom.to <= LAST_MONTH ? custom.to : LAST_MONTH;
+      return from <= to ? r(from, to) : r(to, from);
+    }
+    default: return r(addMonths(LAST_MONTH, -11), LAST_MONTH);
+  }
+}
+
+/** The equal-length period immediately before a range, or null when it would start before the data. */
+export function previousRange(range: DateRange): { from: string; to: string } | null {
+  const n = monthsBetween(range.from, range.to);
+  const from = addMonths(range.from, -n);
+  return from < FIRST_MONTH ? null : { from, to: addMonths(range.from, -1) };
+}
+
+export function rangeLabel(range: { from: string; to: string }): string {
+  const f = (ym: string) => new Date(`${ym}-01T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  return range.from === range.to ? f(range.from) : `${f(range.from)} – ${f(range.to)}`;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Page filters (slicers). All of them are applied server-side, on both customer and monthly tables.
+
+export const RISK_BANDS = ['High', 'Medium', 'Low'] as const;
+export const LIFECYCLE_STAGES = ['New', 'Active', 'At Risk', 'Lapsed'] as const;
+
 export interface Filters {
   customerType: CustomerType | 'all';
   region: string | 'all';
+  state: string | 'all';
   owner: string | 'all';
+  riskBand: string | 'all';
+  lifecycle: string | 'all';
+  productLine: string | 'all';
+  proOnly: boolean;
+  range: DateRange;
 }
 
-export const ALL_FILTERS: Filters = { customerType: 'all', region: 'all', owner: 'all' };
+export const ALL_FILTERS: Filters = {
+  customerType: 'all', region: 'all', state: 'all', owner: 'all', riskBand: 'all', lifecycle: 'all', productLine: 'all',
+  proOnly: false, range: presetRange('last12'),
+};
+
+/** Only the customer-attribute slicers (not the date range): used for snapshot tables and cache keys. */
+export function slicerKey(f: Filters): string {
+  const rest: Partial<Filters> = { ...f };
+  delete rest.range;
+  return JSON.stringify(rest);
+}
 
 async function lake() {
   const client = await getRayfinClient();
   return client.connectors.c360lakehouse;
 }
 
-type Eq = { eq: string };
+type Eq<T = string> = { eq: T };
 
-/** Connector `where` clause for the shared page filters. */
+/** Connector `where` clause for the customer-attribute slicers (same column names on metrics and monthly). */
 function filterWhere(f: Filters) {
+  const w: {
+    customerType?: Eq; region?: Eq; state?: Eq; accountManager?: Eq; churnRiskBand?: Eq; lifecycleStage?: Eq;
+    productLinesBought?: { contains: string }; isProMember?: Eq<boolean>;
+  } = {};
+  if (f.customerType !== 'all') w.customerType = { eq: f.customerType };
+  if (f.region !== 'all') w.region = { eq: f.region };
+  if (f.state !== 'all') w.state = { eq: f.state };
+  if (f.owner !== 'all') w.accountManager = { eq: f.owner };
+  if (f.riskBand !== 'all') w.churnRiskBand = { eq: f.riskBand };
+  if (f.lifecycle !== 'all') w.lifecycleStage = { eq: f.lifecycle };
+  if (f.productLine !== 'all') w.productLinesBought = { contains: `|${f.productLine}|` };
+  if (f.proOnly) w.isProMember = { eq: true };
+  return w;
+}
+
+/** Type / region / owner only: for tables that do not carry the other slicer columns (SKU buyers, cascades). */
+function basicWhere(f: Filters) {
   const w: { customerType?: Eq; region?: Eq; accountManager?: Eq } = {};
   if (f.customerType !== 'all') w.customerType = { eq: f.customerType };
   if (f.region !== 'all') w.region = { eq: f.region };
   if (f.owner !== 'all') w.accountManager = { eq: f.owner };
   return w;
+}
+
+/** Slicers plus a month range on the monthly fact table. */
+function monthlyWhere(f: Filters, range: { from: string; to: string }) {
+  return { ...filterWhere(f), month: { gte: new Date(`${range.from}-01T00:00:00Z`), lte: new Date(`${range.to}-01T00:00:00Z`) } };
 }
 
 const METRIC_FIELDS = [
@@ -35,6 +146,7 @@ const METRIC_FIELDS = [
   'badCsat12m', 'avgResolutionMinutes12m', 'engagementRate90d', 'engagementRatePrior', 'daysSinceEngaged',
   'churnRiskScore', 'churnRiskBand', 'topChurnDriver', 'churnDrivers', 'upsellScore', 'upsellValueEst',
   'topUpsellProductLine', 'revenueAtRisk', 'priorityScore', 'nextBestAction',
+  'city', 'state', 'latitude', 'longitude', 'lifecycleStage', 'productLinesBought',
 ] as const;
 
 /** One row per Wholesale / Direct customer (about 3,000 rows: fetched in a single page). */
@@ -44,10 +156,41 @@ export async function fetchMetrics(f: Filters) {
 }
 export type MetricRow = Awaited<ReturnType<typeof fetchMetrics>>[number];
 
-/** Portfolio trend: monthly totals aggregated server-side under the page filters. */
+const RANGE_AGGREGATES = {
+  netSales: { sum: 'netSales' },
+  returns: { sum: 'returnsAmount' },
+  orders: { sum: 'orders' },
+  touches: { sum: 'marketingTouches' },
+  engagements: { sum: 'marketingEngagements' },
+  tickets: { sum: 'tickets' },
+} as const;
+
+type Agg = { netSales?: number | null; returns?: number | null; orders?: number | null; touches?: number | null; engagements?: number | null; tickets?: number | null };
+const totals = (a: Agg) => ({
+  netSales: a.netSales ?? 0, returns: a.returns ?? 0, orders: a.orders ?? 0,
+  touches: a.touches ?? 0, engagements: a.engagements ?? 0, tickets: a.tickets ?? 0,
+});
+export type RangeTotals = ReturnType<typeof totals>;
+
+/** Grand totals for a month range under the slicers (one aggregated row, computed server-side). */
+export async function fetchRangeTotals(f: Filters, range: { from: string; to: string }) {
+  const l = await lake();
+  const rows = await l.GoldCustomerMonthly.where(monthlyWhere(f, range)).aggregate(RANGE_AGGREGATES).execute();
+  return totals(rows[0]?.aggregations ?? {});
+}
+
+/** Range totals by city (at most ~20 groups), for the map. */
+export async function fetchRangeByCity(f: Filters, range: { from: string; to: string }) {
+  const l = await lake();
+  const rows = await l.GoldCustomerMonthly.where(monthlyWhere(f, range)).groupBy(['city', 'state']).aggregate(RANGE_AGGREGATES).execute();
+  return rows.map((r) => ({ city: r.fields.city ?? '', state: r.fields.state ?? '', ...totals(r.aggregations) }));
+}
+export type CityTotals = Awaited<ReturnType<typeof fetchRangeByCity>>[number];
+
+/** Portfolio trend: monthly totals for the selected range, aggregated server-side under the slicers. */
 export async function fetchMonthlyTrend(f: Filters) {
   const l = await lake();
-  const rows = await l.GoldCustomerMonthly.where(filterWhere(f))
+  const rows = await l.GoldCustomerMonthly.where(monthlyWhere(f, f.range))
     .groupBy(['month'])
     .aggregate({
       netSales: { sum: 'netSales' },
@@ -165,7 +308,7 @@ export async function fetchSkuBuyers(sku: string, f: Filters) {
   return l.GoldCustomerSku.select([
     'unifiedCustomerId', 'customerType', 'customerName', 'region', 'accountManager', 'netSalesTtm', 'netSalesPriorTtm',
     'unitsTtm', 'returnsTtm', 'lastPurchased',
-  ]).where({ ...filterWhere(f), sku: { eq: sku } }).first(5000).execute();
+  ]).where({ ...basicWhere(f), sku: { eq: sku } }).first(5000).execute();
 }
 export type SkuBuyerRow = Awaited<ReturnType<typeof fetchSkuBuyers>>[number];
 
@@ -208,7 +351,7 @@ export async function fetchCustomerCascades(f: Filters) {
   return l.GoldCustomerCascade.select([
     'unifiedCustomerId', 'customerType', 'customerName', 'region', 'accountManager', 'spikeMonth', 'ticketsInSpikeMonth',
     'engagementBefore', 'engagementAfter', 'monthlySalesBefore', 'monthlySalesAfter', 'engagementDropLag', 'salesDropLag', 'pattern',
-  ]).where(filterWhere(f)).first(10000).execute();
+  ]).where(basicWhere(f)).first(10000).execute();
 }
 export type CustomerCascadeRow = Awaited<ReturnType<typeof fetchCustomerCascades>>[number];
 

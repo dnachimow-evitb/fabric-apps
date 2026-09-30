@@ -5,6 +5,8 @@ import { ThemeContext } from '@/hooks/theme.context';
 export interface ChartColors {
   series1: string;
   series2: string;
+  /** Low end of the sequential blue scale (lighter in light mode, darker in dark mode). */
+  series1Light: string;
   muted: string;
   border: string;
 }
@@ -15,6 +17,7 @@ function read(): ChartColors {
   return {
     series1: v('--color-series-1', '#1c6fb8'),
     series2: v('--color-series-2', '#d9480f'),
+    series1Light: v('--color-series-1-light', '#9ec5f4'),
     muted: v('--color-muted-foreground', '#5b6067'),
     border: v('--color-border', '#dcd9d3'),
   };
