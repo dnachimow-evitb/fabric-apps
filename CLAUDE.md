@@ -12,6 +12,17 @@ user's demo tenant (dsdemo.net), not client data.
   run via `c360_runner` (set `START_AT`; it writes full errors to `Files/_reports/pipeline_status/status.txt`).
 - `customer-360/`: Rayfin app (React/Vite). Read its `AGENTS.md` first. Views in `packages/frontend/src/views/`,
   data layer `src/lib/c360.ts`, merge entity `packages/data/src/MergeProposal.ts` (stewards in `stewards.ts`).
+  Pages: Portfolio, Playbook, Risk, Customer 360, Identity (nav in `App.tsx`). Frontend `src/` paths:
+  - **Dependent slicers**: `lib/filter-options.ts` (each slicer lists only values present under the others; a change
+    drops selections it made impossible). Options come from the unfiltered `metrics:all` query in `App.tsx`.
+  - **Data lineage** panel at the bottom of Portfolio (`views/DataLineage.tsx`): tabs Visuals / Pipeline / Tables / Scores.
+    Per-visual records (tables, dimensions, measures, equivalent SQL for the live filters, encoding) are hand-written
+    in `lib/visual-lineage.ts`; **update them when a query in `c360.ts` or a visual changes**. `components/LineageLink.tsx`
+    is the "Lineage" button on every visual (via `lib/lineage-context.ts`).
+  - **Growth Playbook** (`views/PlaybookView.tsx`, engine `lib/playbook.ts`): next best action → commercial play
+    (service credit, loyalty rebate/coupon, returns fix, cross-sell bundle, win-back); offers funded by return on spend
+    within an incentive budget. Keep/win/returns rates are planning assumptions shown on the page. The user rejected an
+    hours/capacity framing: this is an eCommerce + wholesale tools business, so talk budget, offers and business drivers.
 - `mockups/customer-360.html`: early static mockup. `app/`: unused Power Apps code-app starter.
 
 ## Fabric (tenant dsdemo.net, trial capacity FTL64)
@@ -39,10 +50,16 @@ user's demo tenant (dsdemo.net), not client data.
 - Keep all `@microsoft/rayfin-*` packages on the same version (currently 1.36.1).
 - Lakehouse tables are keyless; the connector is read-only. Aggregations use `.where().groupBy().aggregate()`.
 - Don't name columns `group`; the SQL endpoint lags Spark writes (refresh metadata before discovery).
+- Tailwind `leading-*` utilities map to this design system's tokens: `leading-none` / `leading-relaxed` resolve to 0px.
+  Use the numbered tokens (`leading-300`, `leading-hero-1000`, ...) that match the text size.
+- Several source files are CRLF; scripted multi-line replacements must normalise line endings first.
+- Right after `rayfin up` (or when idle) the trial capacity's SQL endpoint takes ~10 s to answer; pages show skeletons
+  until then. That is latency, not missing data.
+- Browser checks: the user is signed in to the hosted app in the browser pane. Use the pane's default size (emulated
+  viewports render oddly) and set `document.documentElement.style.scrollBehavior='auto'` before scripted scrolling.
 
 ## Open items
 - **In-app Q&A (Claude)** is complete on branch `qa-claude-wip` but parked: the user must run
   `npx rayfin secret set ANTHROPIC_API_KEY` (masked prompt; never paste keys in chat), then enable functions in
   `rayfin.yml`, run `npm run dev` for function typegen, merge the branch, run the gates, redeploy.
-- Live browser validation of the deployed app is pending: the user must sign in (dnachimow@dsdemo.net) in the browser pane.
 - Work is on branch `customer-360-mockup`, PR https://github.com/dnachimow-evitb/power-apps/pull/1.
