@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { CalendarRange, ChevronDown, SlidersHorizontal, X } from 'lucide-react';
+import { CalendarRange, SlidersHorizontal, X } from 'lucide-react';
+
+import { Combobox, type ComboOption } from '@/components/Combobox';
 
 import {
   ALL_FILTERS, DATE_PRESETS, FIRST_MONTH, LAST_MONTH, LIFECYCLE_STAGES, RISK_BANDS, cityLabel, presetRange, rangeLabel,
@@ -11,49 +13,7 @@ export interface FilterOptions { regions: string[]; states: string[]; owners: st
 
 const FIELD = 'rounded-md border border-input bg-card px-300 py-200 text-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
-function Select({ label, value, onChange, options, className }: {
-  label: string; value: string; onChange: (v: string) => void; options: [string, string][]; className?: string;
-}) {
-  return (
-    <label className={cn('flex flex-col gap-100', className)}>
-      <span className="font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={cn(FIELD, 'min-w-[calc(var(--spacing-800)*4.5)]')}>
-        {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-      </select>
-    </label>
-  );
-}
-
-const opt = (all: string, xs: readonly string[]): [string, string][] => [['all', all], ...xs.map((x) => [x, x] as [string, string])];
-
-/** Multi-select dropdown (checkbox list in a popover). */
-function MultiSelect({ label, all, values, options, onChange }: {
-  label: string; all: string; values: string[]; options: string[]; onChange: (v: string[]) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const summary = values.length === 0 ? all : values.length <= 2 ? values.join(', ') : `${values.length} selected`;
-  const toggle = (v: string) => onChange(values.includes(v) ? values.filter((x) => x !== v) : [...values, v]);
-  return (
-    <div className="relative flex flex-col gap-100">
-      <span className="font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="listbox"
-        className={cn(FIELD, 'inline-flex min-w-[calc(var(--spacing-800)*4.5)] items-center justify-between gap-200 text-left')}>
-        <span className="truncate">{summary}</span><ChevronDown aria-hidden className="icon-size-200 shrink-0" />
-      </button>
-      {open && (
-        <div role="listbox" aria-multiselectable aria-label={label} onMouseLeave={() => setOpen(false)}
-          className="absolute top-full z-30 mt-100 max-h-[calc(var(--spacing-800)*9)] min-w-full overflow-y-auto rounded-md border border-border bg-popover p-200 text-popover-foreground shadow-lg">
-          <button type="button" onClick={() => onChange([])} className="mb-100 w-full rounded-sm px-200 py-100 text-left text-200 hover:bg-accent">{all}</button>
-          {options.map((o) => (
-            <label key={o} className="flex cursor-pointer items-center gap-200 rounded-sm px-200 py-100 text-300 hover:bg-accent">
-              <input type="checkbox" checked={values.includes(o)} onChange={() => toggle(o)} className="accent-[color:var(--color-primary)]" />{o}
-            </label>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+const opts = (xs: readonly string[]): ComboOption[] => xs.map((x) => ({ value: x, label: x }));
 
 export function FilterBar({ filters, onChange, options, showDate = true }: {
   filters: Filters; onChange: (f: Filters) => void; options: FilterOptions; showDate?: boolean;
@@ -83,8 +43,8 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
       <div className="flex flex-wrap items-end gap-300">
         {showDate && (
           <>
-            <Select label="Period" value={filters.range.preset} onChange={(v) => setPreset(v as DatePreset)}
-              options={DATE_PRESETS.map((p) => [p.id, p.label])} />
+            <Combobox label="Period" value={filters.range.preset} onChange={(v) => setPreset(v as DatePreset)}
+              options={DATE_PRESETS.map((p) => ({ value: p.id, label: p.label }))} placeholder="Search periods…" />
             {filters.range.preset === 'custom' && (
               <div className="flex items-end gap-200">
                 <label className="flex flex-col gap-100">
@@ -101,11 +61,12 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
             )}
           </>
         )}
-        <Select label="Customer type" value={filters.customerType} onChange={(v) => set({ customerType: v as Filters['customerType'] })}
-          options={[['all', 'All customers'], ['Wholesale', 'Wholesale (B2B)'], ['Direct', 'Direct (B2C)']]} />
-        <Select label="Region" value={filters.region} onChange={(v) => set({ region: v })} options={opt('All regions', options.regions)} />
-        <MultiSelect label="State" all="All states" values={filters.states} options={options.states} onChange={(states) => set({ states })} />
-        <Select label="Account owner" value={filters.owner} onChange={(v) => set({ owner: v })} options={opt('All owners', options.owners)} />
+        <Combobox label="Customer type" value={filters.customerType} allLabel="All customers"
+          onChange={(v) => set({ customerType: v as Filters['customerType'] })}
+          options={[{ value: 'Wholesale', label: 'Wholesale (B2B)' }, { value: 'Direct', label: 'Direct (B2C)' }]} />
+        <Combobox label="Region" value={filters.region} allLabel="All regions" onChange={(v) => set({ region: v })} options={opts(options.regions)} />
+        <Combobox multiple label="State" value={filters.states} allLabel="All states" onChange={(states) => set({ states })} options={opts(options.states)} />
+        <Combobox label="Account owner" value={filters.owner} allLabel="All owners" onChange={(v) => set({ owner: v })} options={opts(options.owners)} />
         <button type="button" onClick={() => setMore(!more)} aria-expanded={more}
           className={cn('inline-flex items-center gap-100 self-end rounded-md border px-300 py-200 text-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             more || extraCount ? 'border-foreground font-semibold' : 'border-border text-muted-foreground hover:text-foreground')}>
@@ -121,10 +82,10 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
 
       {more && (
         <div className="flex flex-wrap items-end gap-300 border-t border-border pt-300">
-          <Select label="Churn risk" value={filters.riskBand} onChange={(v) => set({ riskBand: v })} options={opt('Any risk', RISK_BANDS)} />
-          <Select label="Lifecycle" value={filters.lifecycle} onChange={(v) => set({ lifecycle: v })} options={opt('Any stage', LIFECYCLE_STAGES)} />
-          <Select label="Buys product line" value={filters.productLine} onChange={(v) => set({ productLine: v })}
-            options={opt('Any product line', options.productLines)} />
+          <Combobox label="Churn risk" value={filters.riskBand} allLabel="Any risk" onChange={(v) => set({ riskBand: v })} options={opts(RISK_BANDS)} />
+          <Combobox label="Lifecycle" value={filters.lifecycle} allLabel="Any stage" onChange={(v) => set({ lifecycle: v })} options={opts(LIFECYCLE_STAGES)} />
+          <Combobox label="Buys product line" value={filters.productLine} allLabel="Any product line"
+            onChange={(v) => set({ productLine: v })} options={opts(options.productLines)} />
           <label className="flex items-center gap-200 self-end py-200 text-300">
             <input type="checkbox" checked={filters.proOnly} onChange={(e) => set({ proOnly: e.target.checked })}
               className="size-400 accent-[color:var(--color-primary)]" />

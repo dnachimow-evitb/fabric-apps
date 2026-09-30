@@ -5,6 +5,7 @@ import { useQuery } from '@/hooks/use-query';
 import { useTheme } from '@/hooks/theme.context';
 import { ALL_FILTERS, fetchMetrics, slicerKey, type Filters } from '@/lib/c360';
 import { FilterBar } from '@/components/FilterBar';
+import { Combobox, type ComboOption } from '@/components/Combobox';
 import { cn } from '@/lib/utils';
 import { CustomerView } from '@/views/CustomerView';
 import { PortfolioView } from '@/views/PortfolioView';
@@ -91,21 +92,19 @@ function App() {
 }
 
 function CustomerPicker({ rows, value, onChange }: {
-  rows: { unifiedCustomerId?: string | null; customerName?: string | null; customerType?: string | null }[];
+  rows: { unifiedCustomerId?: string | null; customerName?: string | null; customerType?: string | null; city?: string | null; state?: string | null }[];
   value: string | null; onChange: (id: string) => void;
 }) {
-  const sorted = useMemo(() => [...rows].sort((a, b) => (a.customerType ?? '').localeCompare(b.customerType ?? '') * -1
-    || (a.customerName ?? '').localeCompare(b.customerName ?? '')), [rows]);
+  const options = useMemo<ComboOption[]>(() => [...rows]
+    .sort((a, b) => (b.customerType ?? '').localeCompare(a.customerType ?? '') || (a.customerName ?? '').localeCompare(b.customerName ?? ''))
+    .map((r) => ({
+      value: r.unifiedCustomerId ?? '',
+      label: r.customerName ?? '',
+      hint: [r.customerType, r.city && r.state ? `${r.city}, ${r.state}` : null].filter(Boolean).join(' · '),
+    })), [rows]);
   return (
-    <label className="flex flex-col gap-100">
-      <span className="font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">Customer</span>
-      <select value={value ?? ''} onChange={(e) => onChange(e.target.value)}
-        className="min-w-[calc(var(--spacing-800)*10)] rounded-md border border-input bg-card px-300 py-200 text-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        {sorted.map((r) => (
-          <option key={r.unifiedCustomerId} value={r.unifiedCustomerId ?? ''}>{r.customerName} — {r.customerType}</option>
-        ))}
-      </select>
-    </label>
+    <Combobox label="Customer" value={value ?? ''} onChange={onChange} options={options}
+      placeholder="Search by name, type or city…" widthClass="min-w-[calc(var(--spacing-800)*10)]" />
   );
 }
 
