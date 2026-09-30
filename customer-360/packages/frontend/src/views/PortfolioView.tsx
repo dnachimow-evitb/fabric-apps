@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { VegaVisual, useCssTheme } from '@microsoft/fabric-visuals';
 import type { VisualizationSpec } from '@microsoft/fabric-visuals';
 import type { DataTable, InteractionEvent } from '@microsoft/fabric-visuals-core';
@@ -14,7 +14,10 @@ import { count, money, pct, signedPct } from '@/lib/format';
 import type { QueryState } from '@/hooks/use-query';
 import { SkuExplorer } from '@/views/SkuExplorer';
 import { CustomerMap } from '@/views/CustomerMap';
-import { DataLineage } from '@/views/DataLineage';
+import { DataLineage, type LineageTab } from '@/views/DataLineage';
+import { LineageLink } from '@/components/LineageLink';
+import { LineageContext } from '@/lib/lineage-context';
+import type { VisualId } from '@/lib/visual-lineage';
 
 const n = (v: unknown) => (typeof v === 'number' ? v : Number(v ?? 0));
 
@@ -35,14 +38,22 @@ export function PortfolioView({ filters, metrics, onOpenCustomer, onFilters }: {
   const [line, setLine] = useState<string | null>(null);
   const [sku, setSku] = useState<string | null>(null);
   const pickLine = (l: string | null) => { setLine(l); setSku(null); };
+  const [lineageTab, setLineageTab] = useState<LineageTab>('visuals');
+  const [lineageVisual, setLineageVisual] = useState<VisualId>('kpi-sales');
+  const lineageRef = useRef<HTMLDivElement>(null);
+  const showLineage = (id: VisualId) => {
+    setLineageVisual(id); setLineageTab('visuals');
+    lineageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
+    <LineageContext.Provider value={showLineage}>
     <div className="flex flex-col gap-400">
       <Loaded q={metrics} skeleton={<div className="grid grid-cols-2 gap-400 lg:grid-cols-6">{Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-[calc(var(--spacing-800)*3)]" />)}</div>}>
         {(rows) => <KpiStrip rows={rows} totals={totals.data} prev={prevTotals.data ?? null} filters={filters} />}
       </Loaded>
 
-      <Card title="Customer map" subtitle="Customers by city. Pick the metric; bubble size and colour show it. Select cities to filter the whole page.">
+      <Card title="Customer map" action={<LineageLink id="map" />} subtitle="Customers by city. Pick the metric; bubble size and colour show it. Select cities to filter the whole page.">
         <Loaded q={cities} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*13)]" />}>
           {(rows) => (snapshot.data
             ? <CustomerMap snapshot={snapshot.data} cities={rows} filters={filters} selected={filters.cities}
@@ -52,24 +63,24 @@ export function PortfolioView({ filters, metrics, onOpenCustomer, onFilters }: {
       </Card>
 
       <div className="grid grid-cols-1 gap-400 lg:grid-cols-12">
-        <Card className="lg:col-span-7" title="Churn risk × upsell opportunity"
+        <Card className="lg:col-span-7" title="Churn risk × upsell opportunity" action={<LineageLink id="matrix" />}
           subtitle="Each dot is a customer, sized by trailing-12-month net sales. Click a dot to open the customer.">
           <Loaded q={metrics} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*11)]" />}>
             {(rows) => rows.length ? <Matrix rows={rows} onOpen={onOpenCustomer} /> : <Empty>No customers match these filters.</Empty>}
           </Loaded>
         </Card>
-        <Card className="lg:col-span-5" title="SKU diversification" subtitle="Active customers by number of product lines bought in the last 12 months (of 9)">
+        <Card className="lg:col-span-5" title="SKU diversification" action={<LineageLink id="breadth" />} subtitle="Active customers by number of product lines bought in the last 12 months (of 9)">
           <Loaded q={metrics} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*11)]" />}>
             {(rows) => <Breadth rows={rows} />}
           </Loaded>
         </Card>
 
-        <Card className="lg:col-span-7" title="Net sales and returns" subtitle={`Monthly, ${rangeLabel(filters.range)}. Returns on their own scale below.`}>
+        <Card className="lg:col-span-7" title="Net sales and returns" action={<LineageLink id="trend" />} subtitle={`Monthly, ${rangeLabel(filters.range)}. Returns on their own scale below.`}>
           <Loaded q={trend} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*10)]" />}>
             {(rows) => rows.length ? <Trend rows={rows} /> : <Empty>No sales in this period.</Empty>}
           </Loaded>
         </Card>
-        <Card className="lg:col-span-5" title="Product line penetration" subtitle="Share of active customers who bought each line. Gaps are upsell whitespace. Click a line to explore its SKUs.">
+        <Card className="lg:col-span-5" title="Product line penetration" action={<LineageLink id="penetration" />} subtitle="Share of active customers who bought each line. Gaps are upsell whitespace. Click a line to explore its SKUs.">
           <Loaded q={penetration} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*10)]" />}>
             {(rows) => <Penetration rows={rows} filters={filters} onLine={pickLine} />}
           </Loaded>
@@ -80,17 +91,18 @@ export function PortfolioView({ filters, metrics, onOpenCustomer, onFilters }: {
             metrics={metrics.data} onOpenCustomer={onOpenCustomer} />
         </div>
 
-        <Card className="lg:col-span-12" title="Priority customers" subtitle="Ranked by revenue at risk plus upsell value. Select a customer for the full 360.">
+        <Card className="lg:col-span-12" title="Priority customers" action={<LineageLink id="priority" />} subtitle="Ranked by revenue at risk plus upsell value. Select a customer for the full 360.">
           <Loaded q={metrics} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*10)]" />}>
             {(rows) => <PriorityTable rows={rows} onOpen={onOpenCustomer} />}
           </Loaded>
         </Card>
 
-        <div className="lg:col-span-12">
-          <DataLineage filters={filters} />
+        <div ref={lineageRef} className="scroll-mt-[calc(var(--spacing-800)*6)] lg:col-span-12">
+          <DataLineage filters={filters} tab={lineageTab} onTab={setLineageTab} visual={lineageVisual} onVisual={setLineageVisual} />
         </div>
       </div>
     </div>
+    </LineageContext.Provider>
   );
 }
 
@@ -110,12 +122,12 @@ function KpiStrip({ rows, totals, prev, filters }: {
   const engagement = totals && totals.touches ? totals.engagements / totals.touches : NaN;
   return (
     <div className="grid grid-cols-2 gap-400 md:grid-cols-3 xl:grid-cols-6">
-      <Kpi accent label="Net sales" value={money(sales)} detail={totals ? change(totals.netSales, prev?.netSales) : 'Loading…'} />
-      <Kpi label="Return rate" value={pct(returnRate)} detail={totals ? `${money(totals.returns)} refunded · ${label}` : 'Loading…'} />
-      <Kpi label="Marketing engagement" value={pct(engagement)} detail={totals ? `${count(totals.tickets)} support tickets · ${label}` : 'Loading…'} />
-      <Kpi label="Revenue at risk" value={money(risk)} detail={`${count(high)} high-risk customers · today`} />
-      <Kpi label="Upsell opportunity" value={money(upsell)} detail="Est. annual · today" />
-      <Kpi label="Product lines / customer" value={lines.toFixed(1)} detail={`${count(active.length)} active in last 12 months`} />
+      <Kpi accent action={<LineageLink id="kpi-sales" compact />} label="Net sales" value={money(sales)} detail={totals ? change(totals.netSales, prev?.netSales) : 'Loading…'} />
+      <Kpi action={<LineageLink id="kpi-returns" compact />} label="Return rate" value={pct(returnRate)} detail={totals ? `${money(totals.returns)} refunded · ${label}` : 'Loading…'} />
+      <Kpi action={<LineageLink id="kpi-engagement" compact />} label="Marketing engagement" value={pct(engagement)} detail={totals ? `${count(totals.tickets)} support tickets · ${label}` : 'Loading…'} />
+      <Kpi action={<LineageLink id="kpi-risk" compact />} label="Revenue at risk" value={money(risk)} detail={`${count(high)} high-risk customers · today`} />
+      <Kpi action={<LineageLink id="kpi-upsell" compact />} label="Upsell opportunity" value={money(upsell)} detail="Est. annual · today" />
+      <Kpi action={<LineageLink id="kpi-lines" compact />} label="Product lines / customer" value={lines.toFixed(1)} detail={`${count(active.length)} active in last 12 months`} />
     </div>
   );
 }

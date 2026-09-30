@@ -2,21 +2,23 @@
 // through the lakehouse tables (dimensions, facts, aggregates) to the calculation each visual runs.
 // Content mirrors fabric/notebooks/*.py and src/lib/c360.ts; keep it in step when either changes.
 import { useState, type ReactNode } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowDown, ArrowRight } from 'lucide-react';
 
-import { cityLabel, rangeLabel, type Filters } from '@/lib/c360';
+import { rangeLabel, type Filters } from '@/lib/c360';
 import { cn } from '@/lib/utils';
+import { UPSTREAM, VISUALS, VISUAL_BY_ID, slicerPredicates, type VisualId, type VisualLineage } from '@/lib/visual-lineage';
 
 const TABS = [
+  { id: 'visuals', label: 'Visuals' },
   { id: 'flow', label: 'Pipeline' },
   { id: 'tables', label: 'Tables' },
-  { id: 'calcs', label: 'Calculations' },
   { id: 'scores', label: 'Scores' },
 ] as const;
-type Tab = (typeof TABS)[number]['id'];
+export type LineageTab = (typeof TABS)[number]['id'];
 
 const TH = 'px-300 py-200 text-left font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground';
 const TD = 'px-300 py-300 align-top';
+const H3 = 'font-heading text-300 font-semibold uppercase tracking-wider';
 
 function Code({ children }: { children: ReactNode }) {
   return <code className="rounded-sm bg-muted px-100 font-mono text-200 text-foreground">{children}</code>;
@@ -26,22 +28,24 @@ function Formula({ children }: { children: ReactNode }) {
   return <pre className="whitespace-pre-wrap break-words font-mono text-200 leading-relaxed text-foreground">{children}</pre>;
 }
 
-export function DataLineage({ filters }: { filters: Filters }) {
-  const [tab, setTab] = useState<Tab>('flow');
+export function DataLineage({ filters, tab, onTab, visual, onVisual }: {
+  filters: Filters; tab: LineageTab; onTab: (t: LineageTab) => void; visual: VisualId; onVisual: (v: VisualId) => void;
+}) {
   return (
     <section className="min-w-0 rounded-lg border border-border bg-card p-500 text-card-foreground" aria-labelledby="lineage-title">
       <header className="mb-400">
         <h2 id="lineage-title" className="font-heading text-400 font-semibold uppercase tracking-wider">Data lineage</h2>
         <p className="mt-100 text-200 text-muted-foreground">
-          How every number on this page is built: source systems → lakehouse tables → the calculation each visual runs.
-          Built by the Fabric notebooks in <Code>c360_lakehouse</Code>; scores as of 28 Sep 2026.
+          How every number on this page is built: source systems → lakehouse tables → the query and calculation each visual runs.
+          Use the <strong className="text-foreground">Lineage</strong> button on any visual to jump to it here. Built by the Fabric notebooks
+          in <Code>c360_lakehouse</Code>; scores as of 28 Sep 2026.
         </p>
       </header>
 
       <div role="tablist" aria-label="Lineage sections" className="mb-400 flex flex-wrap gap-400 border-b border-border">
         {TABS.map((t) => (
           <button key={t.id} type="button" role="tab" id={`lineage-tab-${t.id}`} aria-selected={tab === t.id} aria-controls={`lineage-panel-${t.id}`}
-            onClick={() => setTab(t.id)}
+            onClick={() => onTab(t.id)}
             className={cn('-mb-px border-b-2 py-200 font-heading text-300 font-semibold uppercase tracking-wider focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               tab === t.id ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground')}>
             {t.label}
@@ -50,12 +54,192 @@ export function DataLineage({ filters }: { filters: Filters }) {
       </div>
 
       <div role="tabpanel" id={`lineage-panel-${tab}`} aria-labelledby={`lineage-tab-${tab}`}>
+        {tab === 'visuals' && <Visuals filters={filters} visual={visual} onVisual={onVisual} />}
         {tab === 'flow' && <Pipeline />}
         {tab === 'tables' && <Tables />}
-        {tab === 'calcs' && <Calculations filters={filters} />}
         {tab === 'scores' && <Scores />}
       </div>
     </section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Visuals: per-visual lineage
+
+const GROUPS = ['KPI tiles', 'Charts', 'SKU explorer', 'Tables'] as const;
+
+const TIMING: Record<VisualLineage['timing'], string> = {
+  period: 'Follows the period picker',
+  snapshot: 'Snapshot: trailing 12 months to 28 Sep 2026',
+  both: 'Period and snapshot figures',
+};
+
+function Visuals({ filters, visual, onVisual }: { filters: Filters; visual: VisualId; onVisual: (v: VisualId) => void }) {
+  const v = VISUAL_BY_ID.get(visual) ?? VISUALS[0];
+  return (
+    <div className="grid grid-cols-1 gap-500 lg:grid-cols-[minmax(0,1fr)_minmax(0,4fr)]">
+      <nav aria-label="Visuals on this page" className="flex flex-col gap-300">
+        {GROUPS.map((g) => (
+          <div key={g}>
+            <div className="mb-100 font-heading text-100 font-semibold uppercase tracking-wider text-muted-foreground">{g}</div>
+            <ul className="flex flex-wrap gap-100 lg:flex-col">
+              {VISUALS.filter((x) => x.group === g).map((x) => (
+                <li key={x.id}>
+                  <button type="button" onClick={() => onVisual(x.id)} aria-current={x.id === v.id ? 'true' : undefined}
+                    className={cn('w-full rounded-md px-200 py-100 text-left text-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      x.id === v.id ? 'bg-foreground font-semibold text-background' : 'hover:bg-accent')}>
+                    {x.title.replace('SKU explorer: ', '')}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+      <VisualDetail v={v} filters={filters} />
+    </div>
+  );
+}
+
+function Stage({ title, children, className }: { title: string; children: ReactNode; className?: string }) {
+  return (
+    <div className={cn('flex min-w-0 flex-col gap-100 rounded-md border border-border bg-background p-300', className)}>
+      <div className="font-heading text-100 font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function Arrow() {
+  return (
+    <div className="flex items-center justify-center text-muted-foreground" aria-hidden>
+      <ArrowDown className="icon-size-200 md:hidden" /><ArrowRight className="icon-size-200 hidden md:block" />
+    </div>
+  );
+}
+
+function RoleTag({ role }: { role: string }) {
+  return (
+    <span className="rounded-sm border border-border px-100 font-heading text-100 font-semibold uppercase tracking-wider text-muted-foreground">{role}</span>
+  );
+}
+
+function VisualDetail({ v, filters }: { v: VisualLineage; filters: Filters }) {
+  const upstream = [...new Set(v.tables.flatMap((t) => UPSTREAM[t.name]?.from ?? []))];
+  const notebooks = [...new Set(v.tables.map((t) => UPSTREAM[t.name]?.notebook).filter(Boolean))];
+  const active = slicerPredicates(filters);
+  return (
+    <article className="flex min-w-0 flex-col gap-500" aria-labelledby="visual-lineage-title">
+      <header className="flex flex-wrap items-baseline justify-between gap-200">
+        <div>
+          <h3 id="visual-lineage-title" className="font-heading text-500 font-semibold">{v.title}</h3>
+          <p className="text-200 text-muted-foreground">{v.render} · {v.mark}</p>
+        </div>
+        <span className="rounded-full bg-muted px-300 py-100 text-200">{TIMING[v.timing]}</span>
+      </header>
+
+      <div className="grid grid-cols-1 items-stretch gap-200 md:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr_auto_1fr]" aria-label="Lineage flow">
+        <Stage title={`Built from · ${notebooks.join(', ')}`}>
+          <ul className="flex flex-col gap-100">{upstream.map((u) => <li key={u}><Code>{u}</Code></li>)}</ul>
+        </Stage>
+        <Arrow />
+        <Stage title="Gold table(s) read">
+          <ul className="flex flex-col gap-200">
+            {v.tables.map((t) => (
+              <li key={t.name} className="flex flex-col gap-100">
+                <span className="flex flex-wrap items-center gap-100"><Code>{t.name}</Code><RoleTag role={t.role} /></span>
+                <span className="text-200 text-muted-foreground">one row per {t.grain}</span>
+              </li>
+            ))}
+          </ul>
+        </Stage>
+        <Arrow />
+        <Stage title="Query (SQL endpoint)">
+          <p className="text-200">{v.slicers}</p>
+          <p className="text-200 text-muted-foreground">Filtering, grouping and sums run in Fabric; only the result comes back.</p>
+        </Stage>
+        <Arrow />
+        <Stage title="In the browser">
+          <ol className="flex list-decimal flex-col gap-100 pl-400 text-200">{v.browser.map((b) => <li key={b}>{b}</li>)}</ol>
+        </Stage>
+        <Arrow />
+        <Stage title="Rendered as" className="border-foreground">
+          <p className="text-300 font-semibold">{v.render}</p>
+          <p className="text-200 text-muted-foreground">{v.mark}</p>
+        </Stage>
+      </div>
+
+      <div className="grid grid-cols-1 gap-500 xl:grid-cols-2">
+        <div className="min-w-0">
+          <h4 className={cn(H3, 'mb-100')}>Dimensions</h4>
+          <p className="mb-200 text-200 text-muted-foreground">Columns that slice the data: group by, axes, colour, filters.</p>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-300">
+              <thead><tr className="border-b border-border"><th className={TH}>Column</th><th className={TH}>Table</th><th className={TH}>Used as</th></tr></thead>
+              <tbody>
+                {v.dimensions.map((d) => (
+                  <tr key={`${d.table}.${d.column}`} className="border-b border-border last:border-0">
+                    <td className={TD}><Code>{d.column}</Code></td>
+                    <td className={cn(TD, 'text-200 text-muted-foreground')}>{d.table}</td>
+                    <td className={cn(TD, 'text-200')}>{d.use}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="min-w-0">
+          <h4 className={cn(H3, 'mb-100')}>Measures (facts)</h4>
+          <p className="mb-200 text-200 text-muted-foreground">Numeric columns that are aggregated, and the calculations built on them.</p>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-300">
+              <thead><tr className="border-b border-border"><th className={TH}>Measure</th><th className={TH}>Calculation</th><th className={TH}>Computed in</th></tr></thead>
+              <tbody>
+                {v.measures.map((m, i) => (
+                  <tr key={`${m.name}-${i}`} className="border-b border-border last:border-0">
+                    <td className={cn(TD, 'font-semibold')}>{m.name}</td>
+                    <td className={TD}><Formula>{m.expr}</Formula></td>
+                    <td className={cn(TD, 'text-200 text-muted-foreground')}>{m.table === 'browser' ? 'Browser' : m.table}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-500 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="min-w-0">
+          <h4 className={cn(H3, 'mb-100')}>Query, with your current filters</h4>
+          <p className="mb-200 text-200 text-muted-foreground">
+            Equivalent SQL for what the app asks the lakehouse SQL endpoint right now
+            ({active.length ? `${active.length} slicer${active.length > 1 ? 's' : ''} set` : 'no slicers set'}; period {rangeLabel(filters.range)}).
+          </p>
+          <div className="overflow-x-auto rounded-md border border-border bg-background p-300"><Formula>{v.sql(filters)}</Formula></div>
+        </div>
+        <div className="flex min-w-0 flex-col gap-400">
+          <div>
+            <h4 className={cn(H3, 'mb-200')}>Visual encoding</h4>
+            <table className="w-full border-collapse text-300">
+              <tbody>
+                {v.encoding.map(([ch, field]) => (
+                  <tr key={ch} className="border-b border-border last:border-0">
+                    <td className="py-100 pr-300 align-top font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">{ch}</td>
+                    <td className="py-100 align-top">{field}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {v.notes && (
+            <div>
+              <h4 className={cn(H3, 'mb-200')}>Notes</h4>
+              <ul className="flex list-disc flex-col gap-100 pl-400 text-200">{v.notes.map((n) => <li key={n}>{n}</li>)}</ul>
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -100,7 +284,7 @@ function Pipeline() {
 
       <div className="grid grid-cols-1 gap-400 lg:grid-cols-2">
         <div>
-          <h3 className="mb-200 font-heading text-300 font-semibold uppercase tracking-wider">Notebooks (run in order by c360_runner)</h3>
+          <h3 className={cn(H3, 'mb-200')}>Notebooks (run in order by c360_runner)</h3>
           <ol className="flex flex-col gap-200 text-300">
             {NOTEBOOKS.map(([nb, what], i) => (
               <li key={nb}><span className="text-muted-foreground tabular-nums">{i + 1}.</span> <Code>{nb}</Code> <span className="text-muted-foreground">· {what}</span></li>
@@ -108,7 +292,7 @@ function Pipeline() {
           </ol>
         </div>
         <div>
-          <h3 className="mb-200 font-heading text-300 font-semibold uppercase tracking-wider">Identity resolution</h3>
+          <h3 className={cn(H3, 'mb-200')}>Identity resolution</h3>
           <p className="text-300">
             ERP accounts (wholesale) and Shopify customers (direct) are the anchors. Klaviyo and Zendesk records attach to an anchor by the
             first rule that matches: <strong>shared ID</strong> (or, for Zendesk users, their organisation's account),
@@ -195,78 +379,6 @@ function Tables() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Calculations
-
-const CALCS: { visual: string; table: string; calc: string; filters: string }[] = [
-  { visual: 'Net sales', table: 'gold_customer_monthly', calc: 'SUM(net_sales)\nvs. the same-length period just before', filters: 'All slicers + period' },
-  { visual: 'Return rate', table: 'gold_customer_monthly', calc: 'SUM(returns_amount) / SUM(net_sales)\nreturns counted in the month refunded', filters: 'All slicers + period' },
-  { visual: 'Marketing engagement', table: 'gold_customer_monthly', calc: 'SUM(marketing_engagements) / SUM(marketing_touches)\ntouches = campaign email/SMS received\nengagements = opened/clicked email, clicked SMS\nsupport tickets = SUM(tickets)', filters: 'All slicers + period' },
-  { visual: 'Revenue at risk', table: 'gold_customer_metrics', calc: 'SUM(revenue_at_risk)\nrevenue_at_risk = net_sales_ttm × churn_risk_score / 100\nhigh-risk = COUNT where churn_risk_band = High', filters: 'All slicers; snapshot (ignores period)' },
-  { visual: 'Upsell opportunity', table: 'gold_customer_metrics', calc: 'SUM(upsell_value_est)\n= each customer\'s top-3 recommendations (see Scores)', filters: 'All slicers; snapshot' },
-  { visual: 'Product lines / customer', table: 'gold_customer_metrics', calc: 'AVG(product_lines_ttm) WHERE orders_ttm > 0', filters: 'All slicers; snapshot' },
-  { visual: 'Customer map', table: 'gold_customer_monthly + gold_customer_metrics', calc: 'Period: SUM(net_sales, returns, …) GROUP BY city, state\nSnapshot: COUNT(customers), SUM(revenue_at_risk), AVG(churn_risk_score),\n  SUM(upsell_value_est), COUNT(High risk) GROUP BY city, state', filters: 'All slicers except the map\'s own city selection' },
-  { visual: 'Churn risk × upsell', table: 'gold_customer_metrics', calc: 'One dot per customer: x = churn_risk_score, y = upsell_score,\nsize = net_sales_ttm', filters: 'All slicers; snapshot' },
-  { visual: 'SKU diversification', table: 'gold_customer_metrics', calc: 'COUNT(customers) GROUP BY product_lines_ttm WHERE orders_ttm > 0', filters: 'All slicers; snapshot' },
-  { visual: 'Net sales and returns', table: 'gold_customer_monthly', calc: 'SUM(net_sales), SUM(returns_amount) GROUP BY month', filters: 'All slicers + period' },
-  { visual: 'Product line penetration', table: 'gold_product_line_penetration', calc: 'active customers (ordered in last 365 days) who bought the line in 12 months\n÷ all active customers, per customer type', filters: 'Customer type only (pre-aggregated)' },
-  { visual: 'SKU explorer', table: 'gold_sku_performance, gold_customer_sku, gold_sku_affinity', calc: 'SKU: 12-month net sales, units, buyers, returns ÷ sales, YoY\nBuyers: per-customer SKU sales\nAlso bought: confidence = buyers of both ÷ buyers of this SKU\n  lift = confidence ÷ share of customers buying the other SKU', filters: 'SKUs: customer type; buyers: type, region, owner' },
-  { visual: 'Priority customers', table: 'gold_customer_metrics', calc: 'Top 15 by priority_score\npriority_score = revenue_at_risk × 0.6 + upsell_value_est × 2', filters: 'All slicers; snapshot' },
-];
-
-/** The current slicers, written as the WHERE clause the connector sends. */
-function describeWhere(f: Filters): string[] {
-  const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
-  const w: string[] = [];
-  if (f.customerType !== 'all') w.push(`customer_type = ${q(f.customerType)}`);
-  if (f.region !== 'all') w.push(`region = ${q(f.region)}`);
-  if (f.states.length) w.push(`state IN (${f.states.map(q).join(', ')})`);
-  if (f.cities.length) w.push(`city IN (${[...new Set(f.cities.map((c) => cityLabel(c).split(', ')[0]))].map(q).join(', ')})`);
-  if (f.owner !== 'all') w.push(`account_manager = ${q(f.owner)}`);
-  if (f.riskBand !== 'all') w.push(`churn_risk_band = ${q(f.riskBand)}`);
-  if (f.lifecycle !== 'all') w.push(`lifecycle_stage = ${q(f.lifecycle)}`);
-  if (f.productLine !== 'all') w.push(`product_lines_bought LIKE ${q(`%|${f.productLine}|%`)}`);
-  if (f.proOnly) w.push('is_pro_member = 1');
-  return w;
-}
-
-function Calculations({ filters }: { filters: Filters }) {
-  const where = describeWhere(filters);
-  const month = `month BETWEEN '${filters.range.from}-01' AND '${filters.range.to}-01'`;
-  return (
-    <div className="flex flex-col gap-400">
-      <div className="rounded-md border border-border bg-background p-300">
-        <div className="mb-100 font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">Filters applied right now</div>
-        <Formula>{`WHERE ${where.length ? where.join('\n  AND ') : '1 = 1  -- no slicers'}\n  AND ${month}   -- period (${rangeLabel(filters.range)}), monthly table only`}</Formula>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-300">
-          <thead>
-            <tr className="border-b border-border">
-              <th className={TH}>Visual</th><th className={TH}>Reads</th><th className={TH}>Calculation</th><th className={TH}>Filtered by</th>
-            </tr>
-          </thead>
-          <tbody>
-            {CALCS.map((c) => (
-              <tr key={c.visual} className="border-b border-border last:border-0">
-                <td className={cn(TD, 'font-semibold')}>{c.visual}</td>
-                <td className={TD}><Code>{c.table}</Code></td>
-                <td className={TD}><Formula>{c.calc}</Formula></td>
-                <td className={cn(TD, 'text-200 text-muted-foreground')}>{c.filters}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="text-200 text-muted-foreground">
-        <strong className="text-foreground">Snapshot</strong> figures are computed once per rebuild over the trailing 12 months to 28 Sep 2026
-        (TTM; the prior 12 months for year-over-year), so the period picker doesn't change them. <strong className="text-foreground">Period</strong> figures
-        are summed live from the monthly table for the months you pick.
-      </p>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
 // Scores
 
 const CHURN_DRIVERS: [string, string, string][] = [
@@ -291,7 +403,7 @@ function Scores() {
   return (
     <div className="grid grid-cols-1 gap-500 lg:grid-cols-2">
       <div className="flex flex-col gap-200">
-        <h3 className="font-heading text-300 font-semibold uppercase tracking-wider">Churn risk score (0–100)</h3>
+        <h3 className={H3}>Churn risk score (0–100)</h3>
         <Formula>{'churn_risk_score = min(100, 5 + Σ driver points)\nband: High ≥ 60 · Medium ≥ 35 · Low < 35'}</Formula>
         <table className="w-full border-collapse text-300">
           <thead><tr className="border-b border-border"><th className={TH}>Driver</th><th className={TH}>Points</th><th className={TH}>Rule</th></tr></thead>
@@ -309,7 +421,7 @@ function Scores() {
 
       <div className="flex flex-col gap-400">
         <div className="flex flex-col gap-200">
-          <h3 className="font-heading text-300 font-semibold uppercase tracking-wider">Upsell</h3>
+          <h3 className={H3}>Upsell</h3>
           <Formula>{`For each product line a customer did not buy in 12 months:
 estimated_annual_value = peer_penetration × avg_spend_per_buyer
                          × 1.5 if viewed in last 90 days (else 1)
@@ -320,7 +432,7 @@ upsell_score     = percentile rank of upsell_value_est
           <p className="text-200 text-muted-foreground">Peers are customers of the same type (Wholesale or Direct).</p>
         </div>
         <div className="flex flex-col gap-200">
-          <h3 className="font-heading text-300 font-semibold uppercase tracking-wider">Next best action (first rule that matches)</h3>
+          <h3 className={H3}>Next best action (first rule that matches)</h3>
           <ol className="flex flex-col gap-100 text-300">
             {ACTIONS.map(([when, action], i) => (
               <li key={when}><span className="text-muted-foreground tabular-nums">{i + 1}.</span> {when} <ArrowRight aria-hidden className="icon-size-100 inline align-middle text-muted-foreground" /> <strong>{action}</strong></li>

@@ -23,10 +23,15 @@ export function Card({ title, subtitle, action, className, children }: {
   );
 }
 
-export function Kpi({ label, value, detail, accent }: { label: string; value: string; detail?: ReactNode; accent?: boolean }) {
+export function Kpi({ label, value, detail, accent, action }: {
+  label: string; value: string; detail?: ReactNode; accent?: boolean; action?: ReactNode;
+}) {
   return (
     <div className={cn('min-w-0 rounded-lg border border-border bg-card p-400', accent && 'border-t-4 border-t-primary')}>
-      <div className="font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="flex items-start justify-between gap-100">
+        <div className="font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+        {action}
+      </div>
       <div className="mt-200 font-[family-name:var(--font-numeric)] text-hero-700 font-semibold leading-hero-700">{value}</div>
       {detail && <div className="mt-100 text-200 text-muted-foreground">{detail}</div>}
     </div>

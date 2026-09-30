@@ -5,6 +5,7 @@ import type { DataTable, InteractionEvent } from '@microsoft/fabric-visuals-core
 import { X } from 'lucide-react';
 
 import { Card, Empty, Kpi, Loaded, RiskBadge, Skeleton } from '@/components/ui';
+import { LineageLink } from '@/components/LineageLink';
 import { useQuery } from '@/hooks/use-query';
 import { useChartColors } from '@/lib/chart-colors';
 import {
@@ -43,11 +44,14 @@ export function SkuExplorer({ filters, line, sku, onLine, onSku, metrics, onOpen
   return (
     <Card title="SKU explorer" subtitle="Pick a product line (or click a bar in Product line penetration), then a SKU to see who buys it and what goes with it."
       action={(
+        <div className="flex items-center gap-200">
+        <LineageLink id="sku-chart" />
         <select value={line ?? ''} onChange={(e) => { onLine(e.target.value || null); onSku(null); }} aria-label="Product line"
           className="rounded-md border border-input bg-card px-300 py-100 text-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <option value="">All product lines</option>
           {lines.map((l) => <option key={l} value={l}>{l}</option>)}
         </select>
+        </div>
       )}>
       <Loaded q={perf} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*10)]" />}>
         {(rows) => {
@@ -103,7 +107,10 @@ function SkuTable({ skus, onSku }: { skus: SkuAgg[]; onSku: (s: string) => void 
     .sort((a, b) => (b.returns / b.sales + b.tickets / Math.max(1, b.buyers)) - (a.returns / a.sales + a.tickets / Math.max(1, a.buyers))).slice(0, 10);
   return (
     <div>
-      <h3 className="mb-200 font-heading text-300 font-semibold uppercase tracking-wider">SKUs to watch</h3>
+      <div className="mb-200 flex items-center justify-between gap-200">
+        <h3 className="font-heading text-300 font-semibold uppercase tracking-wider">SKUs to watch</h3>
+        <LineageLink id="sku-watch" />
+      </div>
       <p className="mb-300 text-200 text-muted-foreground">Highest return rate and support tickets per buyer. Select one for detail.</p>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-300">
@@ -165,7 +172,10 @@ function SkuDetail({ s, filters, metrics, onClose, onOpenCustomer, onSku }: {
       </div>
       <div className="grid grid-cols-1 gap-300 md:grid-cols-2">
         <div className="min-w-0">
-          <h4 className="mb-200 font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">Top buyers (12 mo)</h4>
+          <div className="mb-200 flex items-center justify-between gap-200">
+            <h4 className="font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">Top buyers (12 mo)</h4>
+            <LineageLink id="sku-buyers" compact />
+          </div>
           <Loaded q={buyers} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*5)]" />}>
             {(rows) => {
               const top = [...rows].filter((r) => n(r.netSalesTtm) > 0).sort((a, b) => n(b.netSalesTtm) - n(a.netSalesTtm)).slice(0, 8);
@@ -192,7 +202,10 @@ function SkuDetail({ s, filters, metrics, onClose, onOpenCustomer, onSku }: {
           </Loaded>
         </div>
         <div className="min-w-0">
-          <h4 className="mb-200 font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">Bought together</h4>
+          <div className="mb-200 flex items-center justify-between gap-200">
+            <h4 className="font-heading text-200 font-semibold uppercase tracking-wider text-muted-foreground">Bought together</h4>
+            <LineageLink id="sku-affinity" compact />
+          </div>
           <Loaded q={affinity} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*5)]" />}>
             {(rows) => {
               const shown = rows.filter((r) => filters.customerType === 'all' || r.customerType === filters.customerType)
