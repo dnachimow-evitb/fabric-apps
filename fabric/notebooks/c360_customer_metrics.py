@@ -76,16 +76,8 @@ m_tix = tickets.groupBy("unified_customer_id", month("created_at").alias("month"
 
 monthly = (m_sales.join(m_returns, ["unified_customer_id", "month"], "full")
            .join(m_mkt, ["unified_customer_id", "month"], "full").join(m_tix, ["unified_customer_id", "month"], "full")
-           .na.fill(0).where(F.col("month") <= as_of)
-           # denormalised filter columns so the app can aggregate by month server-side under any filter
-           .join(customers.select("unified_customer_id", "customer_type", "region", "account_manager"), "unified_customer_id"))
-save(monthly.select("unified_customer_id", "customer_type", "region", "account_manager", "month",
-                    F.col("net_sales").cast("decimal(14,2)").alias("net_sales"),
-                    F.col("orders").cast("int").alias("orders"), F.col("returns_amount").cast("decimal(14,2)").alias("returns_amount"),
-                    F.col("returns_count").cast("int").alias("returns_count"),
-                    F.col("marketing_touches").cast("int").alias("marketing_touches"),
-                    F.col("marketing_engagements").cast("int").alias("marketing_engagements"),
-                    F.col("tickets").cast("int").alias("tickets")), "gold_customer_monthly")
+           .na.fill(0).where(F.col("month") <= as_of))
+# Saved at the end of this notebook, joined to the customer attributes (so every slicer works on monthly data too).
 
 # %% [markdown]
 # ## Product lines: mix, penetration and whitespace
@@ -286,7 +278,40 @@ for c in ["net_sales_ttm", "net_sales_prior_ttm", "returns_ttm", "upsell_value_e
 for c in ["sales_yoy", "return_rate_ttm", "engagement_rate_90d", "engagement_rate_prior"]:
     out = out.withColumn(c, F.round(c, 4))
 out = out.withColumn("avg_resolution_minutes_12m", F.round("avg_resolution_minutes_12m").cast("int")).withColumn("as_of_date", as_of)
+
+# Slicer and map attributes: location (with coordinates), lifecycle stage, and the product lines bought in 12 months
+# as a "|Line A|Line B|" list so the app can filter with `contains`.
+CITY_COORDS = {  # (city, state): (lat, lon) for the cities in the test data
+    ("New York", "NY"): (40.7128, -74.0060), ("Boston", "MA"): (42.3601, -71.0589), ("Greenwich", "CT"): (41.0262, -73.6282),
+    ("Philadelphia", "PA"): (39.9526, -75.1652), ("Short Hills", "NJ"): (40.7479, -74.3254), ("Miami", "FL"): (25.7617, -80.1918),
+    ("Atlanta", "GA"): (33.7490, -84.3880), ("Charlotte", "NC"): (35.2271, -80.8431), ("Naples", "FL"): (26.1420, -81.7948),
+    ("Nashville", "TN"): (36.1627, -86.7816), ("Chicago", "IL"): (41.8781, -87.6298), ("Dallas", "TX"): (32.7767, -96.7970),
+    ("Houston", "TX"): (29.7604, -95.3698), ("Minneapolis", "MN"): (44.9778, -93.2650), ("St. Louis", "MO"): (38.6270, -90.1994),
+    ("Los Angeles", "CA"): (34.0522, -118.2437), ("San Francisco", "CA"): (37.7749, -122.4194), ("Scottsdale", "AZ"): (33.4942, -111.9261),
+    ("Seattle", "WA"): (47.6062, -122.3321), ("Denver", "CO"): (39.7392, -104.9903),
+}
+coords = spark.createDataFrame([(c, st, la, lo) for (c, st), (la, lo) in CITY_COORDS.items()], "city string, state string, latitude double, longitude double")
+lines_bought = (line_ttm.where("net_sales_ttm > 0").groupBy("unified_customer_id")
+                .agg(F.concat(F.lit("|"), F.concat_ws("|", F.array_sort(F.collect_set("product_line"))), F.lit("|")).alias("product_lines_bought")))
+attrs = (dim.select("unified_customer_id", "city", "state", "lifecycle_stage")
+         .join(coords, ["city", "state"], "left").join(lines_bought, "unified_customer_id", "left")
+         .withColumn("product_lines_bought", F.coalesce("product_lines_bought", F.lit("|"))))
+out = out.join(attrs, "unified_customer_id", "left")
 save(out, "gold_customer_metrics")
+
+# Monthly facts with the same slicer attributes, so date-range aggregates respect every filter server-side.
+slicers = spark.table("gold_customer_metrics").select(
+    "unified_customer_id", "customer_type", "region", "account_manager", "state", "city", "churn_risk_band", "lifecycle_stage",
+    "is_pro_member", "product_lines_bought")
+save(monthly.join(slicers, "unified_customer_id").select(
+    "unified_customer_id", "customer_type", "region", "account_manager", "state", "city", "churn_risk_band", "lifecycle_stage",
+    "is_pro_member", "product_lines_bought", "month",
+    F.col("net_sales").cast("decimal(14,2)").alias("net_sales"),
+    F.col("orders").cast("int").alias("orders"), F.col("returns_amount").cast("decimal(14,2)").alias("returns_amount"),
+    F.col("returns_count").cast("int").alias("returns_count"),
+    F.col("marketing_touches").cast("int").alias("marketing_touches"),
+    F.col("marketing_engagements").cast("int").alias("marketing_engagements"),
+    F.col("tickets").cast("int").alias("tickets")), "gold_customer_monthly")
 
 # %% [markdown]
 # ## Activity timeline (latest 25 events per customer)

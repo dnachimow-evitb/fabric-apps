@@ -14,6 +14,7 @@
   /* Chart series (validated blue/orange pair, all-pairs CVD-safe in light and dark) */
   --color-series-1: #1c6fb8; /* Wholesale / this year */
   --color-series-2: #d9480f; /* Direct / last year */
+  --color-series-1-light: #9ec5f4; /* low end of the sequential blue scale (map) */
   /* Status (risk) colours: always paired with an icon + label */
   --color-status-good: #2b8a3e;
   --color-status-warning: #e8a317;
@@ -176,6 +177,7 @@
     --color-hover: #2a2e34;
     --color-series-1: #3d8bd4;
     --color-series-2: #e8590c;
+    --color-series-1-light: #184f95;
     --color-status-good: #51cf66;
     --color-status-warning: #fcc419;
     --color-status-critical: #ff6b6b;
