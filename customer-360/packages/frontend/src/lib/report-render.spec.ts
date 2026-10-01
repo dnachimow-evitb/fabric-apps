@@ -34,7 +34,7 @@ describe('paintSnapshot', () => {
     paintSnapshot({
       rect: (x, y, w, h) => boxes.push([x, y, w, h]),
       text: (s, x, y) => { texts.push(s); boxes.push([x, y, 0, 0]); },
-    }, snapshot, new Date('2026-09-30T12:00:00Z'));
+    }, snapshot, new Date(2026, 8, 30, 21, 0));
     for (const [x, y, w, h] of boxes) {
       expect(x).toBeGreaterThanOrEqual(0);
       expect(y).toBeGreaterThanOrEqual(0);
@@ -49,7 +49,7 @@ describe('paintSnapshot', () => {
 
 describe('renderReport', () => {
   it('produces a PDF file', async () => {
-    const f = await renderReport([snapshot, { ...snapshot, line: 'Hand Tools' }], 'pdf', new Date('2026-09-30T12:00:00Z'));
+    const f = await renderReport([snapshot, { ...snapshot, line: 'Hand Tools' }], 'pdf', new Date(2026, 8, 30, 21, 0));
     expect(f.name).toBe('Contoso-2-product-lines-snapshot-2026-09-30.pdf');
     expect(f.blob.type).toBe('application/pdf');
     const head = new TextDecoder().decode(new Uint8Array(await f.blob.arrayBuffer()).slice(0, 5));
@@ -57,7 +57,7 @@ describe('renderReport', () => {
   });
 
   it('produces a PowerPoint file', async () => {
-    const f = await renderReport([snapshot], 'pptx', new Date('2026-09-30T12:00:00Z'));
+    const f = await renderReport([snapshot], 'pptx', new Date(2026, 8, 30, 21, 0));
     expect(f.name).toBe('Contoso-Power-Tools-snapshot-2026-09-30.pptx');
     const head = new Uint8Array(await f.blob.arrayBuffer()).slice(0, 2);
     expect([...head]).toEqual([0x50, 0x4b]); // "PK": a zip package

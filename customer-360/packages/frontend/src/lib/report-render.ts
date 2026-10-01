@@ -252,7 +252,9 @@ const MIME: Record<ReportFormat, string> = {
 export async function renderReport(snapshots: LineSnapshot[], format: ReportFormat, generatedAt = new Date()): Promise<ReportFile> {
   const raw = format === 'pdf' ? await renderPdf(snapshots, generatedAt) : await renderPptx(snapshots, generatedAt);
   const blob = raw.type === MIME[format] ? raw : new Blob([raw], { type: MIME[format] });
-  const day = generatedAt.toISOString().slice(0, 10);
+  // Local calendar date (toISOString would give tomorrow's date in the evening, US time).
+  const pad = (v: number) => String(v).padStart(2, '0');
+  const day = `${generatedAt.getFullYear()}-${pad(generatedAt.getMonth() + 1)}-${pad(generatedAt.getDate())}`;
   const lines = snapshots.map((s) => s.line);
   const base = lines.length === 1 ? slug(lines[0]) : `${lines.length}-product-lines`;
   return {
