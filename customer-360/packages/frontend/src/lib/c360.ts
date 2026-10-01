@@ -369,6 +369,27 @@ export async function fetchCustomerSkuRecs(id: string) {
 export type SkuRecRow = Awaited<ReturnType<typeof fetchCustomerSkuRecs>>[number];
 
 // ---------------------------------------------------------------------------------------------
+// Product line reports. Rows carry only type / region / owner, so the remaining slicers are applied
+// in the browser by keeping customers present in the filtered metrics (see lib/product-line-report.ts).
+
+/** Every customer × SKU row for one product line (bought in the last 24 months). */
+export async function fetchLineSkuRows(line: string, f: Filters) {
+  const l = await lake();
+  return l.GoldCustomerSku.select([
+    'unifiedCustomerId', 'customerType', 'sku', 'productName', 'netSalesTtm', 'netSalesPriorTtm', 'unitsTtm', 'returnsTtm',
+  ]).where({ ...basicWhere(f), productLine: { eq: line } }).first(50000).execute();
+}
+export type LineSkuRow = Awaited<ReturnType<typeof fetchLineSkuRows>>[number];
+
+/** Customers who don't buy the line yet, with the estimated annual value of winning them. */
+export async function fetchLineUpsell(line: string) {
+  const l = await lake();
+  return l.GoldCustomerUpsell.select(['unifiedCustomerId', 'estimatedAnnualValue'])
+    .where({ productLine: { eq: line } }).first(10000).execute();
+}
+export type LineUpsellRow = Awaited<ReturnType<typeof fetchLineUpsell>>[number];
+
+// ---------------------------------------------------------------------------------------------
 // Risk & correlation
 
 export async function fetchIssueCascade() {
