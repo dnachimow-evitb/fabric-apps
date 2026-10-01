@@ -12,7 +12,7 @@ user's demo tenant (dsdemo.net), not client data.
   run via `c360_runner` (set `START_AT`; it writes full errors to `Files/_reports/pipeline_status/status.txt`).
 - `customer-360/`: Rayfin app (React/Vite). Read its `AGENTS.md` first. Views in `packages/frontend/src/views/`,
   data layer `src/lib/c360.ts`, merge entity `packages/data/src/MergeProposal.ts` (stewards in `stewards.ts`).
-  Pages: Portfolio, Playbook, Risk, Customer 360, Identity (nav in `App.tsx`). Frontend `src/` paths:
+  Pages: Portfolio, Playbook, Risk, Customer 360, Identity, Reports (nav in `App.tsx`). Frontend `src/` paths:
   - **Dependent slicers**: `lib/filter-options.ts` (each slicer lists only values present under the others; a change
     drops selections it made impossible). Options come from the unfiltered `metrics:all` query in `App.tsx`.
   - **Data lineage** panel at the bottom of Portfolio (`views/DataLineage.tsx`): tabs Visuals / Pipeline / Tables / Scores.
@@ -23,6 +23,9 @@ user's demo tenant (dsdemo.net), not client data.
     (service credit, loyalty rebate/coupon, returns fix, cross-sell bundle, win-back); offers funded by return on spend
     within an incentive budget. Keep/win/returns rates are planning assumptions shown on the page. The user rejected an
     hours/capacity framing: this is an eCommerce + wholesale tools business, so talk budget, offers and business drivers.
+  - **Reports** (`views/ReportsView.tsx`): POC. Pick product lines + PDF or PowerPoint; one page/slide per line under the
+    slicers (no date range: product-line data is trailing 12 months only). Figures in `lib/product-line-report.ts`; one
+    layout drawn by `lib/report-render.ts` into both jsPDF and PptxGenJS (lazy-loaded). Files are in-memory blobs (lost on refresh).
 - `mockups/customer-360.html`: early static mockup. `app/`: unused Power Apps code-app starter.
 
 ## Fabric (tenant dsdemo.net, trial capacity FTL64)
