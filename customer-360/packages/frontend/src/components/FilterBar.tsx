@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarRange, SlidersHorizontal, X } from 'lucide-react';
+import { CalendarRange, FilterX, SlidersHorizontal, X } from 'lucide-react';
 
 import { Combobox, type ComboOption } from '@/components/Combobox';
 
@@ -39,6 +39,7 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
   chips('lifecycles', (v) => v);
   chips('productLines', (v) => `Buys ${v}`);
   if (filters.proOnly) active.push(['Pro members', () => set({ proOnly: false })]);
+  const dirty = active.length > 0 || JSON.stringify(filters.range) !== JSON.stringify(ALL_FILTERS.range);
   const extraCount = filters.riskBands.length + filters.lifecycles.length + filters.productLines.length + (filters.proOnly ? 1 : 0);
 
   return (
@@ -75,6 +76,11 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
             more || extraCount ? 'border-foreground font-semibold' : 'border-border text-muted-foreground hover:text-foreground')}>
           <SlidersHorizontal aria-hidden className="icon-size-200" />More filters{extraCount ? ` (${extraCount})` : ''}
         </button>
+        {/* Clears every slicer and the period, on every page (the filters are shared). */}
+        <button type="button" onClick={() => onChange(ALL_FILTERS)} disabled={!dirty}
+          className="inline-flex items-center gap-100 self-end rounded-md px-300 py-200 text-300 font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40">
+          <FilterX aria-hidden className="icon-size-200" />Clear all filters
+        </button>
         {showDate && (
           <p className="ml-auto flex items-center gap-100 self-end text-200 text-muted-foreground">
             <CalendarRange aria-hidden className="icon-size-200" />
@@ -105,8 +111,6 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
               {label}<X aria-hidden className="icon-size-100" />
             </button>
           ))}
-          <button type="button" onClick={() => onChange({ ...ALL_FILTERS, range: filters.range })}
-            className="text-200 font-semibold underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Clear all</button>
         </div>
       )}
     </div>
