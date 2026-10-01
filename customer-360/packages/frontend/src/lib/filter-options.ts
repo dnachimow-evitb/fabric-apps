@@ -16,7 +16,9 @@ export interface SlicerRow {
   isProMember?: boolean | null;
 }
 
-type Field = 'customerType' | 'region' | 'states' | 'cities' | 'owner' | 'riskBand' | 'lifecycle' | 'productLine' | 'proOnly';
+type Field = 'customerType' | 'regions' | 'states' | 'cities' | 'owners' | 'riskBands' | 'lifecycles' | 'productLines' | 'proOnly';
+/** Multi-select slicers: a customer matches when its value is any of the picked ones. */
+type ListField = Exclude<Field, 'customerType' | 'proOnly'>;
 
 export interface FilterOptions {
   customerTypes: string[];
@@ -36,13 +38,14 @@ const cityOf = (r: SlicerRow) => (r.city && r.state ? cityKey(r.city, r.state) :
 /** Does a customer match every slicer except `skip`? */
 function matches(r: SlicerRow, f: Filters, skip?: Field): boolean {
   if (skip !== 'customerType' && f.customerType !== 'all' && r.customerType !== f.customerType) return false;
-  if (skip !== 'region' && f.region !== 'all' && r.region !== f.region) return false;
-  if (skip !== 'states' && f.states.length && !f.states.includes(r.state ?? '')) return false;
-  if (skip !== 'cities' && f.cities.length && !f.cities.includes(cityOf(r))) return false;
-  if (skip !== 'owner' && f.owner !== 'all' && r.accountManager !== f.owner) return false;
-  if (skip !== 'riskBand' && f.riskBand !== 'all' && r.churnRiskBand !== f.riskBand) return false;
-  if (skip !== 'lifecycle' && f.lifecycle !== 'all' && r.lifecycleStage !== f.lifecycle) return false;
-  if (skip !== 'productLine' && f.productLine !== 'all' && !lines(r).includes(f.productLine)) return false;
+  const any = (k: ListField, values: string[]) => skip === k || !f[k].length || values.some((v) => f[k].includes(v));
+  if (!any('regions', [r.region ?? ''])) return false;
+  if (!any('states', [r.state ?? ''])) return false;
+  if (!any('cities', [cityOf(r)])) return false;
+  if (!any('owners', [r.accountManager ?? ''])) return false;
+  if (!any('riskBands', [r.churnRiskBand ?? ''])) return false;
+  if (!any('lifecycles', [r.lifecycleStage ?? ''])) return false;
+  if (!any('productLines', lines(r))) return false;
   if (skip !== 'proOnly' && f.proOnly && !r.isProMember) return false;
   return true;
 }
@@ -60,17 +63,17 @@ const inOrder = (order: readonly string[], s: Set<string>) => order.filter((x) =
 export function filterOptions(rows: SlicerRow[], f: Filters): FilterOptions {
   return {
     customerTypes: inOrder(['Wholesale', 'Direct'], distinct(rows, f, 'customerType', (r) => [r.customerType])),
-    regions: sorted(distinct(rows, f, 'region', (r) => [r.region])),
+    regions: sorted(distinct(rows, f, 'regions', (r) => [r.region])),
     states: sorted(distinct(rows, f, 'states', (r) => [r.state])),
     cities: sorted(distinct(rows, f, 'cities', (r) => [cityOf(r)])),
-    owners: sorted(distinct(rows, f, 'owner', (r) => [r.accountManager])),
-    riskBands: inOrder(RISK_BANDS, distinct(rows, f, 'riskBand', (r) => [r.churnRiskBand])),
-    lifecycles: inOrder(LIFECYCLE_STAGES, distinct(rows, f, 'lifecycle', (r) => [r.lifecycleStage])),
-    productLines: sorted(distinct(rows, f, 'productLine', lines)),
+    owners: sorted(distinct(rows, f, 'owners', (r) => [r.accountManager])),
+    riskBands: inOrder(RISK_BANDS, distinct(rows, f, 'riskBands', (r) => [r.churnRiskBand])),
+    lifecycles: inOrder(LIFECYCLE_STAGES, distinct(rows, f, 'lifecycles', (r) => [r.lifecycleStage])),
+    productLines: sorted(distinct(rows, f, 'productLines', lines)),
   };
 }
 
-const FIELDS: Field[] = ['customerType', 'region', 'states', 'cities', 'owner', 'riskBand', 'lifecycle', 'productLine', 'proOnly'];
+const FIELDS: Field[] = ['customerType', 'regions', 'states', 'cities', 'owners', 'riskBands', 'lifecycles', 'productLines', 'proOnly'];
 
 function changed(a: Filters, b: Filters): Set<Field> {
   return new Set(FIELDS.filter((k) => JSON.stringify(a[k]) !== JSON.stringify(b[k])));
@@ -90,13 +93,14 @@ export function applyFilterChange(rows: SlicerRow[], prev: Filters, next: Filter
   for (const k of FIELDS) {
     if (keep.has(k)) continue;
     const o = filterOptions(rows, f);
-    const valid: Record<Exclude<Field, 'proOnly'>, string[]> = {
-      customerType: o.customerTypes, region: o.regions, states: o.states, cities: o.cities, owner: o.owners,
-      riskBand: o.riskBands, lifecycle: o.lifecycles, productLine: o.productLines,
+    const valid: Record<ListField, string[]> = {
+      regions: o.regions, states: o.states, cities: o.cities, owners: o.owners,
+      riskBands: o.riskBands, lifecycles: o.lifecycles, productLines: o.productLines,
     };
     if (k === 'proOnly') f.proOnly = next.proOnly && rows.some((r) => matches(r, f, 'proOnly') && r.isProMember);
-    else if (k === 'states' || k === 'cities') f[k] = next[k].filter((v) => valid[k].includes(v));
-    else if (next[k] !== 'all' && valid[k].includes(next[k])) Object.assign(f, { [k]: next[k] });
+    else if (k === 'customerType') {
+      if (next.customerType !== 'all' && o.customerTypes.includes(next.customerType)) f.customerType = next.customerType;
+    } else f[k] = next[k].filter((v) => valid[k].includes(v));
   }
   return changed(next, f).size ? f : next;
 }

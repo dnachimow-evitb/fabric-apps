@@ -72,8 +72,8 @@ describe('buildSnapshot', () => {
 describe('describeFilters', () => {
   it('lists active slicers only', () => {
     expect(describeFilters(ALL_FILTERS)).toEqual([]);
-    expect(describeFilters({ ...ALL_FILTERS, customerType: 'Direct', region: 'West', riskBand: 'High', proOnly: true }))
-      .toEqual(['Direct (B2C)', 'Region: West', 'High churn risk', 'Pro members only']);
+    expect(describeFilters({ ...ALL_FILTERS, customerType: 'Direct', regions: ['West', 'South'], riskBands: ['High'], productLines: ['Locks', 'Tools'], proOnly: true }))
+      .toEqual(['Direct (B2C)', 'Region: West, South', 'Churn risk: High', 'Buys Locks or Tools', 'Pro members only']);
   });
 });
 

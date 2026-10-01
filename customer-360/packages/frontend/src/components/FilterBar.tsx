@@ -25,18 +25,21 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
 
   const active: [string, () => void][] = [];
   if (filters.customerType !== 'all') active.push([filters.customerType, () => set({ customerType: 'all' })]);
-  if (filters.region !== 'all') active.push([filters.region, () => set({ region: 'all' })]);
+  const chips = (k: 'regions' | 'owners' | 'riskBands' | 'lifecycles' | 'productLines', label: (v: string) => string) => {
+    for (const v of filters[k]) active.push([label(v), () => set({ [k]: filters[k].filter((x) => x !== v) })]);
+  };
+  chips('regions', (v) => v);
   for (const st of filters.states) active.push([st, () => set({ states: filters.states.filter((x) => x !== st) })]);
   if (filters.cities.length) {
     const label = filters.cities.length <= 2 ? filters.cities.map(cityLabel).join(' + ') : `${filters.cities.length} cities (map)`;
     active.push([label, () => set({ cities: [] })]);
   }
-  if (filters.owner !== 'all') active.push([filters.owner, () => set({ owner: 'all' })]);
-  if (filters.riskBand !== 'all') active.push([`${filters.riskBand} risk`, () => set({ riskBand: 'all' })]);
-  if (filters.lifecycle !== 'all') active.push([filters.lifecycle, () => set({ lifecycle: 'all' })]);
-  if (filters.productLine !== 'all') active.push([`Buys ${filters.productLine}`, () => set({ productLine: 'all' })]);
+  chips('owners', (v) => v);
+  chips('riskBands', (v) => `${v} risk`);
+  chips('lifecycles', (v) => v);
+  chips('productLines', (v) => `Buys ${v}`);
   if (filters.proOnly) active.push(['Pro members', () => set({ proOnly: false })]);
-  const extraCount = [filters.riskBand, filters.lifecycle, filters.productLine].filter((v) => v !== 'all').length + (filters.proOnly ? 1 : 0);
+  const extraCount = filters.riskBands.length + filters.lifecycles.length + filters.productLines.length + (filters.proOnly ? 1 : 0);
 
   return (
     <div className="sticky top-0 z-20 flex flex-col gap-300 rounded-lg border border-border bg-card p-400 shadow-sm" role="group" aria-label="Filters">
@@ -64,9 +67,9 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
         <Combobox label="Customer type" value={filters.customerType} allLabel="All customers"
           onChange={(v) => set({ customerType: v as Filters['customerType'] })}
           options={options.customerTypes.map((t) => ({ value: t, label: TYPE_LABEL[t] ?? t }))} />
-        <Combobox label="Region" value={filters.region} allLabel="All regions" onChange={(v) => set({ region: v })} options={opts(options.regions)} />
+        <Combobox multiple label="Region" value={filters.regions} allLabel="All regions" onChange={(regions) => set({ regions })} options={opts(options.regions)} />
         <Combobox multiple label="State" value={filters.states} allLabel="All states" onChange={(states) => set({ states })} options={opts(options.states)} />
-        <Combobox label="Account owner" value={filters.owner} allLabel="All owners" onChange={(v) => set({ owner: v })} options={opts(options.owners)} />
+        <Combobox multiple label="Account owner" value={filters.owners} allLabel="All owners" onChange={(owners) => set({ owners })} options={opts(options.owners)} />
         <button type="button" onClick={() => setMore(!more)} aria-expanded={more}
           className={cn('inline-flex items-center gap-100 self-end rounded-md border px-300 py-200 text-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             more || extraCount ? 'border-foreground font-semibold' : 'border-border text-muted-foreground hover:text-foreground')}>
@@ -82,10 +85,10 @@ export function FilterBar({ filters, onChange, options, showDate = true }: {
 
       {more && (
         <div className="flex flex-wrap items-end gap-300 border-t border-border pt-300">
-          <Combobox label="Churn risk" value={filters.riskBand} allLabel="Any risk" onChange={(v) => set({ riskBand: v })} options={opts(options.riskBands)} />
-          <Combobox label="Lifecycle" value={filters.lifecycle} allLabel="Any stage" onChange={(v) => set({ lifecycle: v })} options={opts(options.lifecycles)} />
-          <Combobox label="Buys product line" value={filters.productLine} allLabel="Any product line"
-            onChange={(v) => set({ productLine: v })} options={opts(options.productLines)} />
+          <Combobox multiple label="Churn risk" value={filters.riskBands} allLabel="Any risk" onChange={(riskBands) => set({ riskBands })} options={opts(options.riskBands)} />
+          <Combobox multiple label="Lifecycle" value={filters.lifecycles} allLabel="Any stage" onChange={(lifecycles) => set({ lifecycles })} options={opts(options.lifecycles)} />
+          <Combobox multiple label="Buys product line" value={filters.productLines} allLabel="Any product line"
+            onChange={(productLines) => set({ productLines })} options={opts(options.productLines)} />
           <label className="flex items-center gap-200 self-end py-200 text-300">
             <input type="checkbox" checked={filters.proOnly} onChange={(e) => set({ proOnly: e.target.checked })}
               className="size-400 accent-[color:var(--color-primary)]" />

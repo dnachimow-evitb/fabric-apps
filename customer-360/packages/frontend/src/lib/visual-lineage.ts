@@ -74,14 +74,18 @@ export function slicerPredicates(f: Filters, scope: 'all' | 'basic' | 'type' = '
   const w: string[] = [];
   if (f.customerType !== 'all') w.push(`customer_type = ${q(f.customerType)}`);
   if (scope === 'type') return w;
-  if (f.region !== 'all') w.push(`region = ${q(f.region)}`);
+  const inList = (col: string, xs: string[]) => (xs.length === 1 ? `${col} = ${q(xs[0])}` : `${col} IN (${xs.map(q).join(', ')})`);
+  if (f.regions.length) w.push(inList('region', f.regions));
   if (scope === 'all' && f.states.length) w.push(`state IN (${f.states.map(q).join(', ')})`);
   if (scope === 'all' && f.cities.length) w.push(`city IN (${[...new Set(f.cities.map(cityName))].map(q).join(', ')})`);
-  if (f.owner !== 'all') w.push(`account_manager = ${q(f.owner)}`);
+  if (f.owners.length) w.push(inList('account_manager', f.owners));
   if (scope === 'basic') return w;
-  if (f.riskBand !== 'all') w.push(`churn_risk_band = ${q(f.riskBand)}`);
-  if (f.lifecycle !== 'all') w.push(`lifecycle_stage = ${q(f.lifecycle)}`);
-  if (f.productLine !== 'all') w.push(`product_lines_bought LIKE ${q(`%|${f.productLine}|%`)}`);
+  if (f.riskBands.length) w.push(inList('churn_risk_band', f.riskBands));
+  if (f.lifecycles.length) w.push(inList('lifecycle_stage', f.lifecycles));
+  if (f.productLines.length) {
+    const likes = f.productLines.map((l) => `product_lines_bought LIKE ${q(`%|${l}|%`)}`);
+    w.push(likes.length === 1 ? likes[0] : `(${likes.join(' OR ')})`);
+  }
   if (f.proOnly) w.push('is_pro_member = 1');
   return w;
 }

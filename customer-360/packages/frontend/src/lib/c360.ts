@@ -78,22 +78,24 @@ export const RISK_BANDS = ['High', 'Medium', 'Low'] as const;
 export const LIFECYCLE_STAGES = ['New', 'Active', 'At Risk', 'Lapsed'] as const;
 
 export interface Filters {
+  /** Single select: there are only two types, so both = all. */
   customerType: CustomerType | 'all';
-  region: string | 'all';
-  /** Multi-select; empty = all states. */
+  // The rest are multi-select; an empty list = all. Values within one slicer are ORed, slicers are ANDed.
+  regions: string[];
   states: string[];
-  /** Cities picked on the map, as "City|ST" keys; empty = all cities. */
+  /** Cities picked on the map, as "City|ST" keys. */
   cities: string[];
-  owner: string | 'all';
-  riskBand: string | 'all';
-  lifecycle: string | 'all';
-  productLine: string | 'all';
+  owners: string[];
+  riskBands: string[];
+  lifecycles: string[];
+  /** Customers who buy any of these lines. */
+  productLines: string[];
   proOnly: boolean;
   range: DateRange;
 }
 
 export const ALL_FILTERS: Filters = {
-  customerType: 'all', region: 'all', states: [], cities: [], owner: 'all', riskBand: 'all', lifecycle: 'all', productLine: 'all',
+  customerType: 'all', regions: [], states: [], cities: [], owners: [], riskBands: [], lifecycles: [], productLines: [],
   proOnly: false, range: presetRange('last12'),
 };
 
@@ -110,21 +112,25 @@ async function lake() {
 }
 
 type Eq<T = string> = { eq: T };
+type In = { in: string[] };
 
 /** Connector `where` clause for the customer-attribute slicers (same column names on metrics and monthly). */
 function filterWhere(f: Filters) {
   const w: {
-    customerType?: Eq; region?: Eq; state?: { in: string[] }; city?: { in: string[] }; accountManager?: Eq; churnRiskBand?: Eq; lifecycleStage?: Eq;
-    productLinesBought?: { contains: string }; isProMember?: Eq<boolean>;
+    customerType?: Eq; region?: In; state?: In; city?: In; accountManager?: In; churnRiskBand?: In; lifecycleStage?: In;
+    productLinesBought?: { contains: string }; or?: { productLinesBought: { contains: string } }[]; isProMember?: Eq<boolean>;
   } = {};
   if (f.customerType !== 'all') w.customerType = { eq: f.customerType };
-  if (f.region !== 'all') w.region = { eq: f.region };
+  if (f.regions.length) w.region = { in: f.regions };
   if (f.states.length) w.state = { in: f.states };
   if (f.cities.length) w.city = { in: [...new Set(f.cities.map(cityName))] };
-  if (f.owner !== 'all') w.accountManager = { eq: f.owner };
-  if (f.riskBand !== 'all') w.churnRiskBand = { eq: f.riskBand };
-  if (f.lifecycle !== 'all') w.lifecycleStage = { eq: f.lifecycle };
-  if (f.productLine !== 'all') w.productLinesBought = { contains: `|${f.productLine}|` };
+  if (f.owners.length) w.accountManager = { in: f.owners };
+  if (f.riskBands.length) w.churnRiskBand = { in: f.riskBands };
+  if (f.lifecycles.length) w.lifecycleStage = { in: f.lifecycles };
+  // product_lines_bought is "|A|B|": buying any of the picked lines is an OR of contains.
+  const lines = f.productLines.map((l) => ({ productLinesBought: { contains: `|${l}|` } }));
+  if (lines.length === 1) w.productLinesBought = lines[0].productLinesBought;
+  else if (lines.length > 1) w.or = lines;
   if (f.proOnly) w.isProMember = { eq: true };
   return w;
 }
@@ -135,10 +141,10 @@ export const cityLabel = (key: string) => key.split('|').join(', ');
 
 /** Type / region / owner only: for tables that do not carry the other slicer columns (SKU buyers, cascades). */
 function basicWhere(f: Filters) {
-  const w: { customerType?: Eq; region?: Eq; accountManager?: Eq } = {};
+  const w: { customerType?: Eq; region?: In; accountManager?: In } = {};
   if (f.customerType !== 'all') w.customerType = { eq: f.customerType };
-  if (f.region !== 'all') w.region = { eq: f.region };
-  if (f.owner !== 'all') w.accountManager = { eq: f.owner };
+  if (f.regions.length) w.region = { in: f.regions };
+  if (f.owners.length) w.accountManager = { in: f.owners };
   return w;
 }
 

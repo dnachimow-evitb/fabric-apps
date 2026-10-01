@@ -43,13 +43,13 @@ export interface LineSnapshot {
 export function describeFilters(f: Filters): string[] {
   const out: string[] = [];
   if (f.customerType !== 'all') out.push(f.customerType === 'Wholesale' ? 'Wholesale (B2B)' : 'Direct (B2C)');
-  if (f.region !== 'all') out.push(`Region: ${f.region}`);
+  if (f.regions.length) out.push(`Region: ${f.regions.join(', ')}`);
   if (f.states.length) out.push(`State: ${f.states.join(', ')}`);
   if (f.cities.length) out.push(`City: ${f.cities.map(cityLabel).join('; ')}`);
-  if (f.owner !== 'all') out.push(`Owner: ${f.owner}`);
-  if (f.riskBand !== 'all') out.push(`${f.riskBand} churn risk`);
-  if (f.lifecycle !== 'all') out.push(`Lifecycle: ${f.lifecycle}`);
-  if (f.productLine !== 'all') out.push(`Buys ${f.productLine}`);
+  if (f.owners.length) out.push(`Owner: ${f.owners.join(', ')}`);
+  if (f.riskBands.length) out.push(`Churn risk: ${f.riskBands.join(', ')}`);
+  if (f.lifecycles.length) out.push(`Lifecycle: ${f.lifecycles.join(', ')}`);
+  if (f.productLines.length) out.push(`Buys ${f.productLines.join(' or ')}`);
   if (f.proOnly) out.push('Pro members only');
   return out;
 }

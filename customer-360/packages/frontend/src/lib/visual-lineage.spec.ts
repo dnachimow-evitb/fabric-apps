@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ALL_FILTERS, type Filters } from './c360';
 import { UPSTREAM, VISUALS, slicerPredicates } from './visual-lineage';
 
-const f: Filters = { ...ALL_FILTERS, customerType: 'Wholesale', region: "O'Hare", states: ['IL', 'MN'], cities: ['Chicago|IL'], proOnly: true };
+const f: Filters = { ...ALL_FILTERS, customerType: 'Wholesale', regions: ["O'Hare"], states: ['IL', 'MN'], cities: ['Chicago|IL'], proOnly: true };
 
 describe('slicerPredicates', () => {
   it('writes every slicer as SQL, escaping quotes', () => {
@@ -15,6 +15,14 @@ describe('slicerPredicates', () => {
   it('limits the predicates to the columns a table carries', () => {
     expect(slicerPredicates(f, 'basic')).toEqual(["customer_type = 'Wholesale'", "region = 'O''Hare'"]);
     expect(slicerPredicates(f, 'type')).toEqual(["customer_type = 'Wholesale'"]);
+  });
+
+  it('writes several picks as IN lists and product lines as ORed LIKEs', () => {
+    const multi: Filters = { ...ALL_FILTERS, regions: ['West', 'South'], riskBands: ['High'], productLines: ['Locks', 'Tools'] };
+    expect(slicerPredicates(multi)).toEqual([
+      "region IN ('West', 'South')", "churn_risk_band = 'High'",
+      "(product_lines_bought LIKE '%|Locks|%' OR product_lines_bought LIKE '%|Tools|%')",
+    ]);
   });
 });
 
