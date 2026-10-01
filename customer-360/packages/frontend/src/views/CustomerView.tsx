@@ -6,6 +6,7 @@ import { AlertTriangle, Check, CircleAlert, CircleCheck, GitMerge, Headset, Mail
 
 import { Card, Empty, Loaded, RiskBadge, Skeleton } from '@/components/ui';
 import { Combobox, type ComboOption } from '@/components/Combobox';
+import { CustomerJourney } from '@/components/CustomerJourney';
 import { useAuth } from '@/hooks/auth.context';
 import { useQuery, type QueryState } from '@/hooks/use-query';
 import { useChartColors } from '@/lib/chart-colors';
@@ -76,6 +77,16 @@ export function CustomerView({ id, metric, all }: { id: string; metric: MetricRo
           </div>
         </div>
       )}
+
+      <Card title="Customer journey" subtitle="Two years of this customer, acted out. Press play.">
+        <Loaded q={monthly} skeleton={<Skeleton className="h-[calc(var(--spacing-800)*8)]" />}>
+          {(rows) => (
+            <CustomerJourney rows={rows} name={profile.data?.customerName ?? m?.customerName ?? 'this customer'}
+              customerType={m?.customerType ?? profile.data?.customerType} lifecycle={m?.lifecycleStage ?? profile.data?.lifecycleStage}
+              riskBand={m?.churnRiskBand} />
+          )}
+        </Loaded>
+      </Card>
 
       <div className="grid grid-cols-1 gap-400 lg:grid-cols-12">
         <Card className="lg:col-span-8" title="Sales" subtitle="Monthly net sales, this year vs. last year">
