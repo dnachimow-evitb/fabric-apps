@@ -117,7 +117,7 @@ export function schedule(stops: Stop[]): Schedule {
       t += d;
     }
   }
-  walk(months - 0.5);
+  walk(months - 1); // stop on the last month ("now") for the finale
   segments.push({ kind: 'finale', start: t, end: t + FINALE_SECONDS, from: at, to: at });
   t += FINALE_SECONDS;
   return { segments, total: t, months };

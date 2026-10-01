@@ -46,9 +46,9 @@ describe('schedule and frames', () => {
     expect(s.segments.at(-1)!.end).toBeCloseTo(s.total);
   });
 
-  it('walks from before the first month to past the last', () => {
+  it('walks from before the first month to the last', () => {
     expect(frameAt(s, 0).pos).toBeCloseTo(-0.5);
-    expect(frameAt(s, s.total).pos).toBeCloseTo(23.5);
+    expect(frameAt(s, s.total).pos).toBeCloseTo(23); // finale on the last month
     expect(frameAt(s, s.total + 10).kind).toBe('finale');
   });
 

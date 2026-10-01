@@ -17,6 +17,8 @@ const X0 = 40;
 const X1 = 960;
 const GROUND = 225;
 const SPEEDS = [1, 2, 4] as const;
+/** Walker and props are drawn at a small size and scaled up around the feet. */
+const SCALE = 1.35;
 
 const BUTTON = 'inline-flex items-center gap-100 rounded-md border border-border px-300 py-100 text-300 font-semibold hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60';
 const ICON: Record<string, string> = { email: '✉️', buy: '📦', return: '🗑️', stomp: '💢' };
@@ -171,7 +173,7 @@ function Walker({ f, stops, business, finale }: { f: Frame; stops: Stop[]; busin
   const local = f.pos - Math.round(f.pos) + 0.5; // 0..1 across the current month
 
   // Pose (radians from vertical; positive = forward / to the right)
-  const phase = f.walked * Math.PI * 2 * 1.6;
+  const phase = f.walked * Math.PI * 2 * 1.6 + Math.PI / 2; // start mid-stride, not with legs together
   const legL = walking ? Math.sin(phase) * 0.45 : -0.12;
   let legR = walking ? -Math.sin(phase) * 0.45 : 0.12;
   let armL = walking ? -Math.sin(phase) * 0.35 : -0.15;
@@ -253,25 +255,26 @@ function Walker({ f, stops, business, finale }: { f: Frame; stops: Stop[]; busin
       props.push(<text key="party" x={x} y={GROUND - 130 - p * 10} textAnchor="middle" fontSize={30} opacity={seg(p, 0, 0.1)}>🎉</text>);
     } else if (finale === 'active') {
       armR = 2.5 + Math.sin(p * 30) * 0.35;
-      props.push(<text key="hi" x={x + 40} y={GROUND - 124} fontSize={15} fontWeight={700} fill="var(--color-foreground)" opacity={seg(p, 0, 0.1)}>See you next month!</text>);
+      props.push(<text key="hi" x={x - 24} y={GROUND - 112} textAnchor="end" fontSize={15} fontWeight={700} fill="var(--color-foreground)" opacity={seg(p, 0, 0.1)}>See you next month!</text>);
     } else if (finale === 'at-risk') {
       props.push(
+        // The finale happens at the right edge, so the sign stands behind the walker, pointing back.
         <g key="sign" opacity={seg(p, 0, 0.15)}>
-          <line x1={x + 80} x2={x + 80} y1={GROUND} y2={GROUND - 70} stroke="var(--color-foreground)" strokeWidth={3} />
-          <rect x={x + 80} y={GROUND - 92} width={108} height={26} rx={3} fill="var(--color-status-critical)" />
-          <text x={x + 134} y={GROUND - 79} textAnchor="middle" dominantBaseline="middle" fontSize={12} fontWeight={800} fill="#fff">COMPETITOR →</text>
+          <line x1={x - 80} x2={x - 80} y1={GROUND} y2={GROUND - 70} stroke="var(--color-foreground)" strokeWidth={3} />
+          <rect x={x - 188} y={GROUND - 92} width={108} height={26} rx={3} fill="var(--color-status-critical)" />
+          <text x={x - 134} y={GROUND - 79} textAnchor="middle" dominantBaseline="middle" fontSize={12} fontWeight={800} fill="#fff">← COMPETITOR</text>
         </g>,
         <text key="sweat" x={x + 12} y={GROUND - 96 + seg(p, 0.2, 1) * 10} fontSize={14} opacity={seg(p, 0.2, 0.3)}>💧</text>,
       );
       armR = 2.75; // scratching head
     } else {
       sitting = true;
-      props.push(<text key="zz" x={x + 16} y={GROUND - 92 - p * 24} fontSize={18} opacity={seg(p, 0.15, 0.3)}>💤</text>);
+      props.push(<text key="zz" x={x - 36} y={GROUND - 84 - p * 24} fontSize={18} opacity={seg(p, 0.15, 0.3)}>💤</text>);
     }
   }
 
   const hipY = sitting ? -22 : -40 + bob;
-  const leg = (a: number, lift = 0): [number, number] => sitting ? [Math.sin(1.35) * 34, hipY + Math.cos(1.35) * 34 + 12] : [Math.sin(a) * 40, hipY + Math.cos(a) * 40 - lift * 22];
+  const leg = (a: number, lift = 0): [number, number] => [Math.sin(a) * 40, hipY + Math.cos(a) * 40 - lift * 22];
   const [lx, ly] = leg(legL);
   const [rx, ry] = leg(legR, liftR);
   const sh = { x: 0, y: hipY - 28 };
@@ -280,15 +283,31 @@ function Walker({ f, stops, business, finale }: { f: Frame; stops: Stop[]; busin
   const [arx, ary] = arm(armR);
   const headY = sh.y - 17;
   const ink = 'var(--color-foreground)';
+  const face = f.kind === 'finale' && finale === 'at-risk' ? -1 : 1; // glance back at the sign
 
   return (
-    <g>
+    // Everything is drawn around the walker's feet and scaled up together.
+    <g transform={`translate(${x} ${GROUND}) scale(${SCALE}) translate(${-x} ${-GROUND})`}>
       {props}
       <g transform={`translate(${x + shake} ${GROUND})`} stroke={ink} strokeWidth={4} strokeLinecap="round" fill="none">
-        {sitting && <text x={-6} y={4} fontSize={34} textAnchor="middle" stroke="none">🪑</text>}
+        {sitting && (
+          <g strokeWidth={3}>
+            <line x1={-16} y1={hipY + 3} x2={14} y2={hipY + 3} />
+            <line x1={-14} y1={hipY + 3} x2={-14} y2={0} />
+            <line x1={12} y1={hipY + 3} x2={12} y2={0} />
+            <line x1={-16} y1={hipY + 3} x2={-16} y2={hipY - 30} />
+          </g>
+        )}
         {!business && <rect x={-15} y={sh.y + 2} width={11} height={20} rx={3} fill="var(--color-series-1)" stroke="none" />}
-        <line x1={0} y1={hipY} x2={lx} y2={ly} />
-        <line x1={0} y1={hipY} x2={rx} y2={ry} />
+        {sitting ? (
+          // thighs forward along the seat, shins down to the floor
+          <path d={`M 0 ${hipY} L 22 ${hipY} L 24 0 M 0 ${hipY} L 18 ${hipY + 1} L 18 0`} />
+        ) : (
+          <>
+            <line x1={0} y1={hipY} x2={lx} y2={ly} />
+            <line x1={0} y1={hipY} x2={rx} y2={ry} />
+          </>
+        )}
         <line x1={0} y1={hipY} x2={sh.x} y2={sh.y - 6} />
         <line x1={sh.x} y1={sh.y} x2={alx} y2={aly} />
         <line x1={sh.x} y1={sh.y} x2={arx} y2={ary} />
@@ -299,10 +318,10 @@ function Walker({ f, stops, business, finale }: { f: Frame; stops: Stop[]; busin
             <rect x={-16} y={headY - 3} width={32} height={4} rx={2} />
           </g>
         )}
-        <circle cx={4} cy={headY - 1} r={1.4} fill={ink} stroke="none" />
+        <circle cx={4 * face} cy={headY - 1} r={1.4} fill={ink} stroke="none" />
         {act?.kind === 'stomp'
-          ? <path d={`M -1 ${headY + 6} q 5 -4 10 0`} strokeWidth={2} />
-          : <path d={`M -1 ${headY + 4} q 5 4 10 0`} strokeWidth={2} />}
+          ? <path d={`M ${-1 * face} ${headY + 6} q ${5 * face} -4 ${10 * face} 0`} strokeWidth={2} />
+          : <path d={`M ${-1 * face} ${headY + 4} q ${5 * face} 4 ${10 * face} 0`} strokeWidth={2} />}
       </g>
     </g>
   );
