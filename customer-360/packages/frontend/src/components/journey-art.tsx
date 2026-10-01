@@ -454,3 +454,52 @@ export function Walker({ f, stops, business, finale }: { f: Frame; stops: Stop[]
     </g>
   );
 }
+
+// ---------------------------------------------------------------------------------------------
+// Legend: the same drawn icons the trail uses, with what they mean
+
+const LEGEND: { key: string; label: string; icon: ReactNode }[] = [
+  { key: 'email', label: 'Email opened or clicked', icon: <Envelope open={1} /> },
+  { key: 'buy', label: 'Order placed', icon: <Box /> },
+  { key: 'return', label: 'Item returned', icon: <Bin small /> },
+  { key: 'stomp', label: 'Support ticket', icon: <TicketBadge /> },
+  {
+    key: 'ignored', label: 'Email ignored (flies past)', icon: (
+      <g opacity={0.9}>
+        <line x1={13} y1={-3} x2={22} y2={-3} stroke="var(--color-muted-foreground)" strokeWidth={1.5} strokeLinecap="round" />
+        <line x1={13} y1={3} x2={19} y2={3} stroke="var(--color-muted-foreground)" strokeWidth={1.5} strokeLinecap="round" />
+        <g transform="translate(-3 0) scale(0.85)"><Envelope /></g>
+      </g>
+    ),
+  },
+  { key: 'quiet', label: 'Quiet month', icon: <text x={0} y={1} textAnchor="middle" dominantBaseline="middle" fontSize={18} fontWeight={700} fill="var(--color-muted-foreground)">♪</text> },
+  {
+    key: 'wholesale', label: 'Hard hat: Wholesale customer', icon: (
+      <g transform="translate(0 4)">
+        <path d="M -11.5 -3 A 12 11.5 0 0 1 11.5 -3 Z" fill={P.hat} />
+        <rect x={-14} y={-4.5} width={28} height={3.5} rx={1.75} fill={P.hatShade} />
+      </g>
+    ),
+  },
+  {
+    key: 'direct', label: 'Hoodie and backpack: Direct customer', icon: (
+      <g>
+        <rect x={-12} y={-10} width={9} height={18} rx={3.5} fill={P.pack} />
+        <rect x={-5} y={-11} width={16} height={22} rx={6} fill={P.hoodie} />
+      </g>
+    ),
+  },
+];
+
+export function JourneyLegend() {
+  return (
+    <ul aria-label="Legend" className="flex flex-wrap gap-x-500 gap-y-200 text-200 text-muted-foreground">
+      {LEGEND.map((l) => (
+        <li key={l.key} className="flex items-center gap-200">
+          <svg viewBox="-14 -14 28 28" className="size-[22px] shrink-0" aria-hidden>{l.icon}</svg>
+          {l.label}
+        </li>
+      ))}
+    </ul>
+  );
+}

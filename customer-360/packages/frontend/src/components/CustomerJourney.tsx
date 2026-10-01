@@ -9,7 +9,7 @@ import { count } from '@/lib/format';
 import { buildJourney, finaleFor, frameAt, narrate, schedule } from '@/lib/journey';
 import { cn } from '@/lib/utils';
 
-import { Scene, VH, VW, Walker } from './journey-art';
+import { JourneyLegend, Scene, VH, VW, Walker } from './journey-art';
 
 const SPEEDS = [1, 2, 4] as const;
 
@@ -71,6 +71,8 @@ export function CustomerJourney({ rows, name, customerType, lifecycle, riskBand 
         <Walker f={f} stops={stops} business={customerType === 'Wholesale'} finale={finale} />
       </svg>
 
+      <JourneyLegend />
+
       <p aria-live="polite" className="min-h-[1.5em] text-300 font-semibold">{caption}</p>
 
       <div className="flex flex-wrap items-center gap-300">
@@ -101,7 +103,7 @@ export function CustomerJourney({ rows, name, customerType, lifecycle, riskBand 
       <p className="text-200 text-muted-foreground">
         Acted out from monthly totals (gold_customer_monthly): {count(totals.buy)} orders, {count(totals.return)} returns,{' '}
         {count(totals.stomp)} support tickets, {count(totals.email)} campaign email opens or clicks. Days within a month aren't stored,
-        so each month plays emails, orders, returns, then tickets. Ignored emails fly past; quiet months get a whistle.
+        so each month plays emails, orders, returns, then tickets. Each event leaves its icon on the timeline under its month.
       </p>
     </div>
   );
