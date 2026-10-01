@@ -54,6 +54,10 @@ describe('renderReport', () => {
     expect(f.blob.type).toBe('application/pdf');
     const head = new TextDecoder().decode(new Uint8Array(await f.blob.arrayBuffer()).slice(0, 5));
     expect(head).toBe('%PDF-');
+    expect(f.pages).toHaveLength(2);
+    const svg = decodeURIComponent(f.pages[1].split(',')[1]);
+    expect(svg).toContain('>Hand Tools</text>');
+    expect(svg).toContain('Rosen Supply Co.');
   });
 
   it('produces a PowerPoint file', async () => {

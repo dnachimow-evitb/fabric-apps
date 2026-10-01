@@ -81,7 +81,7 @@ export function ReportsView({ filters, metrics, productLines, files, onFiles }: 
       }
     }
     onFiles((prev) => [...made, ...prev]);
-    if (made[0]?.format === 'pdf') setPreview(made[0].id);
+    if (made[0]) setPreview(made[0].id);
     setRunning(false);
   }
 
@@ -196,16 +196,14 @@ export function ReportsView({ filters, metrics, productLines, files, onFiles }: 
                       <td className="py-200 pr-300 text-muted-foreground">{f.createdAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</td>
                       <td className="py-200">
                         <div className="flex justify-end gap-200">
+                          <button type="button" onClick={() => setPreview(preview === f.id ? null : f.id)} className={SECONDARY} aria-pressed={preview === f.id}>
+                            {preview === f.id ? <EyeOff aria-hidden className="icon-size-200" /> : <Eye aria-hidden className="icon-size-200" />}
+                            {preview === f.id ? 'Hide' : 'Preview'}
+                          </button>
                           {f.format === 'pdf' && (
-                            <>
-                              <button type="button" onClick={() => setPreview(preview === f.id ? null : f.id)} className={SECONDARY} aria-pressed={preview === f.id}>
-                                {preview === f.id ? <EyeOff aria-hidden className="icon-size-200" /> : <Eye aria-hidden className="icon-size-200" />}
-                                {preview === f.id ? 'Hide' : 'Preview'}
-                              </button>
-                              <a href={f.url} target="_blank" rel="noopener noreferrer" className={SECONDARY}>
-                                <ExternalLink aria-hidden className="icon-size-200" />Open
-                              </a>
-                            </>
+                            <a href={f.url} target="_blank" rel="noopener noreferrer" className={SECONDARY}>
+                              <ExternalLink aria-hidden className="icon-size-200" />Open
+                            </a>
                           )}
                           <a href={f.url} download={f.name} className={f.format === 'pptx' ? PRIMARY : SECONDARY}>
                             <Download aria-hidden className="icon-size-200" />{f.format === 'pptx' ? 'Open in PowerPoint' : 'Download'}
@@ -223,8 +221,16 @@ export function ReportsView({ filters, metrics, productLines, files, onFiles }: 
             {(() => {
               const shown = files.find((f) => f.id === preview);
               return shown ? (
-                <iframe title={`Preview of ${shown.name}`} src={shown.url}
-                  className="h-[calc(var(--spacing-800)*22)] w-full rounded-md border border-border bg-muted" />
+                <figure className="flex flex-col gap-300">
+                  <figcaption className="text-200 text-muted-foreground">
+                    Preview of <span className="font-semibold text-foreground">{shown.name}</span>
+                    {shown.pages.length > 1 ? ` (${shown.pages.length} ${shown.format === 'pdf' ? 'pages' : 'slides'})` : ''}
+                  </figcaption>
+                  {shown.pages.map((src, i) => (
+                    <img key={i} src={src} alt={`${shown.lines[i] ?? ''} snapshot, ${shown.format === 'pdf' ? 'page' : 'slide'} ${i + 1}`}
+                      className="w-full rounded-md border border-border shadow-sm" />
+                  ))}
+                </figure>
               ) : null;
             })()}
           </div>

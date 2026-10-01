@@ -1,7 +1,9 @@
 // Renders product line snapshots to PDF (jsPDF) or PowerPoint (PptxGenJS) in the browser.
 // One layout drives both formats through a tiny Painter interface (rectangles + single-line text on a
 // 13.333 × 7.5 in page, the PowerPoint widescreen size), so the PDF page and the slide match.
-// The libraries are loaded on demand so they stay out of the main bundle.
+// The libraries are loaded on demand so they stay out of the main bundle. A third painter draws the same
+// layout as SVG for the on-page preview, so previews don't depend on the browser's PDF viewer (which Chrome
+// blocks inside a page when it is set to download PDFs or the viewer is disabled by policy).
 import { count, money, pct } from './format';
 import { slug, type LineSnapshot, type SkuLine } from './product-line-report';
 
@@ -15,6 +17,8 @@ export interface ReportFile {
   blob: Blob;
   url: string;
   createdAt: Date;
+  /** One SVG data URL per page or slide, for the preview. */
+  pages: string[];
 }
 
 const W = 13.333;
@@ -193,6 +197,26 @@ export function paintSnapshot(p: Painter, s: LineSnapshot, generatedAt: Date) {
 // ---------------------------------------------------------------------------------------------
 // Format adapters
 
+const PX = 96; // SVG user units per inch
+const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/** The page as an SVG data URL (shown in an <img>, so it needs no plugin and runs no script). */
+export function snapshotSvg(s: LineSnapshot, generatedAt: Date): string {
+  const parts: string[] = [];
+  const f = (v: number) => +(v * PX).toFixed(2);
+  paintSnapshot({
+    rect(x, y, w, h, fill, stroke) {
+      parts.push(`<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" fill="#${fill}"${stroke ? ` stroke="#${stroke}" stroke-width="1"` : ''}/>`);
+    },
+    text(t, x, y, _w, o) {
+      const anchor = o.align === 'right' ? 'end' : o.align === 'center' ? 'middle' : 'start';
+      parts.push(`<text x="${f(x)}" y="${f(y)}" font-size="${+(o.size * PX / 72).toFixed(2)}" fill="#${o.color ?? C.text}"${o.bold ? ' font-weight="700"' : ''} text-anchor="${anchor}" dominant-baseline="hanging">${esc(t)}</text>`);
+    },
+  }, s, generatedAt);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${f(W)} ${f(H)}" font-family="Helvetica, Arial, sans-serif">${parts.join('')}</svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
 async function renderPdf(snapshots: LineSnapshot[], generatedAt: Date): Promise<Blob> {
   const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ orientation: 'landscape', unit: 'in', format: [W, H] });
@@ -265,5 +289,6 @@ export async function renderReport(snapshots: LineSnapshot[], format: ReportForm
     blob,
     url: URL.createObjectURL(blob),
     createdAt: generatedAt,
+    pages: snapshots.map((s) => snapshotSvg(s, generatedAt)),
   };
 }
