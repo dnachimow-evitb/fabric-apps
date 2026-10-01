@@ -23,6 +23,9 @@ user's demo tenant (dsdemo.net), not client data.
     (service credit, loyalty rebate/coupon, returns fix, cross-sell bundle, win-back); offers funded by return on spend
     within an incentive budget. Keep/win/returns rates are planning assumptions shown on the page. The user rejected an
     hours/capacity framing: this is an eCommerce + wholesale tools business, so talk budget, offers and business drivers.
+  - **Customer journey** card on Customer 360 (`components/CustomerJourney.tsx`, script/clock `lib/journey.ts`): a figure
+    walks 24 months of `gold_customer_monthly` and acts out emails, orders, returns, tickets; finale by lifecycle stage.
+    Humour/engagement piece; never autoplays. Monthly grain, so events within a month play in a fixed order.
   - **Reports** (`views/ReportsView.tsx`): POC. Pick product lines + PDF or PowerPoint; one page/slide per line under the
     slicers (no date range: product-line data is trailing 12 months only). Figures in `lib/product-line-report.ts`; one
     layout drawn by `lib/report-render.ts` into both jsPDF and PptxGenJS (lazy-loaded). Files are in-memory blobs (lost on refresh).
