@@ -23,7 +23,7 @@ describe('filterOptions', () => {
   });
 
   it('limits states, cities and owners to the selected region', () => {
-    const o = filterOptions(ROWS, f({ region: 'West' }));
+    const o = filterOptions(ROWS, f({ regions: ['West'] }));
     expect(o.states).toEqual(['CA', 'WA']);
     expect(o.cities).toEqual(['Los Angeles|CA', 'San Francisco|CA', 'Seattle|WA']);
     expect(o.owners).toEqual(['Ana']);
@@ -37,31 +37,43 @@ describe('filterOptions', () => {
     expect(o.lifecycles).toEqual(['At Risk']);
     expect(o.customerTypes).toEqual(['Wholesale']);
   });
+
+  it('matches any of several values within one slicer', () => {
+    const o = filterOptions(ROWS, f({ riskBands: ['High', 'Medium'] }));
+    expect(o.states).toEqual(['CA', 'TX']);
+    expect(filterOptions(ROWS, f({ productLines: ['Tools', 'Hinges'] })).regions).toEqual(['South', 'West']);
+    expect(filterOptions(ROWS, f({ productLines: ['Tools', 'Hinges'], regions: ['South'] })).owners).toEqual(['Ben']);
+  });
 });
 
 describe('applyFilterChange', () => {
   it('drops states outside a newly picked region but keeps the region', () => {
     const prev = f({ states: ['CA', 'TX'] });
-    const next = applyFilterChange(ROWS, prev, { ...prev, region: 'West' });
-    expect(next.region).toBe('West');
+    const next = applyFilterChange(ROWS, prev, { ...prev, regions: ['West'] });
+    expect(next.regions).toEqual(['West']);
     expect(next.states).toEqual(['CA']);
   });
 
-  it('clears single selections and map cities that no longer match', () => {
-    const prev = f({ owner: 'Ben', cities: ['Dallas|TX', 'Seattle|WA'] });
-    const next = applyFilterChange(ROWS, prev, { ...prev, region: 'West' });
-    expect(next.owner).toBe('all');
+  it('drops only the picked values that no longer match', () => {
+    const prev = f({ owners: ['Ana', 'Ben'], cities: ['Dallas|TX', 'Seattle|WA'] });
+    const next = applyFilterChange(ROWS, prev, { ...prev, regions: ['West'] });
+    expect(next.owners).toEqual(['Ana']);
     expect(next.cities).toEqual(['Seattle|WA']);
+  });
+
+  it('keeps a value while any picked region still has it', () => {
+    const prev = f({ owners: ['Ben'] });
+    expect(applyFilterChange(ROWS, prev, { ...prev, regions: ['West', 'South'] }).owners).toEqual(['Ben']);
   });
 
   it('turns off "Pro members only" when no Pro member remains', () => {
     const prev = f({ proOnly: true });
-    expect(applyFilterChange(ROWS, prev, { ...prev, region: 'South' }).proOnly).toBe(false);
-    expect(applyFilterChange(ROWS, prev, { ...prev, region: 'West' }).proOnly).toBe(true);
+    expect(applyFilterChange(ROWS, prev, { ...prev, regions: ['South'] }).proOnly).toBe(false);
+    expect(applyFilterChange(ROWS, prev, { ...prev, regions: ['West'] }).proOnly).toBe(true);
   });
 
   it('applies changes untouched while customers are still loading', () => {
-    const next = f({ region: 'West', states: ['TX'] });
+    const next = f({ regions: ['West'], states: ['TX'] });
     expect(applyFilterChange([], ALL_FILTERS, next)).toBe(next);
   });
 });
