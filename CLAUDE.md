@@ -68,4 +68,4 @@ user's demo tenant (dsdemo.net), not client data.
 - **In-app Q&A (Claude)** is complete on branch `qa-claude-wip` but parked: the user must run
   `npx rayfin secret set ANTHROPIC_API_KEY` (masked prompt; never paste keys in chat), then enable functions in
   `rayfin.yml`, run `npm run dev` for function typegen, merge the branch, run the gates, redeploy.
-- PR https://github.com/dnachimow-evitb/power-apps/pull/1 (`customer-360-mockup`) is merged into `main`. Start new work on a fresh branch from `main`.
+- PR https://github.com/dnachimow-evitb/fabric-apps/pull/1 (`customer-360-mockup`) is merged into `main`. Start new work on a fresh branch from `main`.
